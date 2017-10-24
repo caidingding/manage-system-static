@@ -49,7 +49,7 @@
                     },
                     {
                         icon: 'el-icon-setting',
-                        index: '2',
+                        index: '3',
                         title: '个人设置',
                         subs: [
                             {
@@ -64,7 +64,7 @@
                     },
                     {
                         icon: 'el-icon-date',
-                        index: '3',
+                        index: '4',
                         title: '参考',
                         subs: [
                             {

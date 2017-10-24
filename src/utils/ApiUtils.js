@@ -25,7 +25,11 @@ ApiUtils.changePassword = params => {
 };
 
 ApiUtils.getProfile = params => {
-    return axios.get(`${base}/api/profile/get`, params).then(res => res.data);
+    return axios.get(`${base}/api/profile/get`, {params: params}).then(res => res.data);
+};
+
+ApiUtils.changeProfile = params => {
+    return axios.post(`${base}/api/profile/change`, params).then(res => res.data);
 };
 
 export default ApiUtils;

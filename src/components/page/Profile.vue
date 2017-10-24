@@ -7,7 +7,7 @@
             </el-breadcrumb>
         </div>
         <div class="form-box">
-            <el-form ref="form" :model="form" label-width="80px">
+            <el-form ref="form" :model="form" :rules="rules" label-width="80px">
                 <el-form-item label="邮箱" prop="email">
                     <el-input v-model="form.email"></el-input>
                 </el-form-item>
@@ -17,24 +17,23 @@
                 <el-form-item label="真实姓名" prop="nickname">
                     <el-input v-model="form.nickname"></el-input>
                 </el-form-item>
-                <el-form-item label="性别" prop="gender">
+                <el-form-item label="性别">
                     <el-radio-group v-model="form.gender">
-                        <el-radio label="男"></el-radio>
-                        <el-radio label="女"></el-radio>
+                        <el-radio :label="1">男</el-radio>
+                        <el-radio :label="0">女</el-radio>
                     </el-radio-group>
                 </el-form-item>
                 <el-form-item label="生日" prop="birthday">
                     <el-col :span="11">
-                        <el-date-picker type="date" placeholder="选择日期" v-model="form.birthday"
-                                        style="width: 100%;"></el-date-picker>
+                        <el-date-picker type="date" format="yyyy-MM-dd" placeholder="选择日期" v-model="form.birthday"
+                                        style="width: 100%;" @change="birthdayChange"></el-date-picker>
                     </el-col>
                 </el-form-item>
                 <el-form-item label="选择地区">
                     <el-select style="width: 100px"
                                v-model="form.province"
                                placeholder="省份"
-                               v-on:change="getProv($event)"
-                               prop="province">
+                               v-on:change="getProv($event)">
                         <el-option
                             v-for="item in provs"
                             :label="item.label"
@@ -42,11 +41,9 @@
                         </el-option>
                     </el-select>
                     <el-select style="width: 100px"
-                               v-if="selectProv!=''"
+                               v-if="form.province!==''||form.province!==null"
                                v-model="form.city"
-                               placeholder="城市"
-                               v-on:change="getCity($event)"
-                               prop="city">
+                               placeholder="城市">
                         <el-option
                             v-for="item in citys"
                             :label="item.label"
@@ -61,7 +58,7 @@
                     <el-input v-model="form.website"></el-input>
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" @click="onSubmit">修改</el-button>
+                    <el-button type="primary" @click="onSubmit('form')">修改</el-button>
                 </el-form-item>
             </el-form>
         </div>
@@ -80,7 +77,7 @@
                     email: '',
                     mobile: '',
                     nickname: '',
-                    gender: '',
+                    gender: 0,
                     birthday: '',
                     province: '',
                     city: '',
@@ -93,7 +90,7 @@
                         {type: 'email', message: '邮箱地址格式有误', trigger: 'blur'}
                     ],
                     mobile: [
-                        {type: 'number', len: 11, message: '这是手机号？', trigger: 'blur'}
+                        {type: 'string', len: 11, message: '这是手机号？', trigger: 'blur'}
                     ],
                     nickname: [
                         {type: 'string', min: 2, max: 6, message: '奇葩的名字啊', trigger: 'blur'}
@@ -109,7 +106,7 @@
                     {label: "天津市", value: "天津市"},
                     {label: "河北省", value: "河北省"},
                     {label: "山西省", value: "山西省"},
-                    {label: "内蒙古自治区", value: "内蒙古自治区"},
+                    {label: "内蒙古", value: "内蒙古"},
                     {label: "辽宁省", value: "辽宁省"},
                     {label: "吉林省", value: "吉林省"},
                     {label: "黑龙江省", value: "黑龙江省"},
@@ -124,34 +121,66 @@
                     {label: "湖北省", value: "湖北省"},
                     {label: "湖南省", value: "湖南省"},
                     {label: "广东省", value: "广东省"},
-                    {label: "广西壮族自治区", value: "广西壮族自治区"},
+                    {label: "广西省", value: "广西省"},
                     {label: "海南省", value: "海南省"},
                     {label: "重庆市", value: "重庆市"},
                     {label: "四川省", value: "四川省"},
                     {label: "贵州省", value: "贵州省"},
                     {label: "云南省", value: "云南省"},
-                    {label: "西藏自治区", value: "西藏自治区"},
+                    {label: "西藏省", value: "西藏省"},
                     {label: "陕西省", value: "陕西省"},
                     {label: "甘肃省", value: "甘肃省"},
                     {label: "青海省", value: "青海省"},
-                    {label: "宁夏回族自治区", value: "宁夏回族自治区"},
-                    {label: "新疆维吾尔自治区", value: "新疆维吾尔自治区"},
+                    {label: "宁夏省", value: "宁夏省"},
+                    {label: "新疆省", value: "新疆省"},
                     {label: "台湾省", value: "台湾省"},
-                    {label: "香港特别行政区", value: "香港特别行政区"},
-                    {label: "澳门特别行政区", value: "澳门特别行政区"}],
+                    {label: "香港", value: "香港"},
+                    {label: "澳门", value: "澳门"}],
                 citys: [],
-                selectProv: '',
             }
         },
         methods: {
-            onSubmit() {
-                this.$message.success('提交成功！');
+            birthdayChange(val) {
+                this.form.birthday = val;
+            },
+            onSubmit(formName) {
+                //提交修改请求
+                const self = this;
+                self.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        //异步修改密码
+                        let params = {
+                            uid: self.form.uid,
+                            email: self.form.email,
+                            mobile: self.form.mobile,
+                            nickname: self.form.nickname,
+                            gender: self.form.gender,
+                            birthday: self.form.birthday,
+                            province: self.form.province,
+                            city: self.form.city,
+                            introduction: self.form.introduction,
+                            website: self.form.website
+                        };
+                        ApiUtils.changeProfile(params).then(function (data) {
+                            if (data.code === 0) {
+                                //修改成功!
+                                self.$message.success('个人信息修改成功！');
+                            } else {
+                                //失败提示
+                                console.log(data.message);
+                                self.$message.error(data.message);
+                            }
+                        });
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                });
             },
             /*二级联动选择地区*/
             getProv: function (prov) {
                 let tempCity = [];
                 this.citys = [];
-                this.selectCity = '';
                 let allCity = [{
                     prov: "北京市",
                     label: "北京市"
@@ -225,40 +254,40 @@
                     prov: "山西省",
                     label: "吕梁市"
                 }, {
-                    prov: "内蒙古自治区",
+                    prov: "内蒙古",
                     label: "呼和浩特市"
                 }, {
-                    prov: "内蒙古自治区",
+                    prov: "内蒙古",
                     label: "包头市"
                 }, {
-                    prov: "内蒙古自治区",
+                    prov: "内蒙古",
                     label: "乌海市"
                 }, {
-                    prov: "内蒙古自治区",
+                    prov: "内蒙古",
                     label: "赤峰市"
                 }, {
-                    prov: "内蒙古自治区",
+                    prov: "内蒙古",
                     label: "通辽市"
                 }, {
-                    prov: "内蒙古自治区",
+                    prov: "内蒙古",
                     label: "鄂尔多斯市"
                 }, {
-                    prov: "内蒙古自治区",
+                    prov: "内蒙古",
                     label: "呼伦贝尔市"
                 }, {
-                    prov: "内蒙古自治区",
+                    prov: "内蒙古",
                     label: "巴彦淖尔市"
                 }, {
-                    prov: "内蒙古自治区",
+                    prov: "内蒙古",
                     label: "乌兰察布市"
                 }, {
-                    prov: "内蒙古自治区",
+                    prov: "内蒙古",
                     label: "兴安盟"
                 }, {
-                    prov: "内蒙古自治区",
+                    prov: "内蒙古",
                     label: "锡林郭勒盟"
                 }, {
-                    prov: "内蒙古自治区",
+                    prov: "内蒙古",
                     label: "阿拉善盟"
                 }, {
                     prov: "辽宁省",
@@ -816,46 +845,46 @@
                     prov: "广东省",
                     label: "云浮市"
                 }, {
-                    prov: "广西壮族自治区",
+                    prov: "广西省",
                     label: "南宁市"
                 }, {
-                    prov: "广西壮族自治区",
+                    prov: "广西省",
                     label: "柳州市"
                 }, {
-                    prov: "广西壮族自治区",
+                    prov: "广西省",
                     label: "桂林市"
                 }, {
-                    prov: "广西壮族自治区",
+                    prov: "广西省",
                     label: "梧州市"
                 }, {
-                    prov: "广西壮族自治区",
+                    prov: "广西省",
                     label: "北海市"
                 }, {
-                    prov: "广西壮族自治区",
+                    prov: "广西省",
                     label: "防城港市"
                 }, {
-                    prov: "广西壮族自治区",
+                    prov: "广西省",
                     label: "钦州市"
                 }, {
-                    prov: "广西壮族自治区",
+                    prov: "广西省",
                     label: "贵港市"
                 }, {
-                    prov: "广西壮族自治区",
+                    prov: "广西省",
                     label: "玉林市"
                 }, {
-                    prov: "广西壮族自治区",
+                    prov: "广西省",
                     label: "百色市"
                 }, {
-                    prov: "广西壮族自治区",
+                    prov: "广西省",
                     label: "贺州市"
                 }, {
-                    prov: "广西壮族自治区",
+                    prov: "广西省",
                     label: "河池市"
                 }, {
-                    prov: "广西壮族自治区",
+                    prov: "广西省",
                     label: "来宾市"
                 }, {
-                    prov: "广西壮族自治区",
+                    prov: "广西省",
                     label: "崇左市"
                 }, {
                     prov: "海南省",
@@ -1059,25 +1088,25 @@
                     prov: "云南省",
                     label: "迪庆藏族自治州"
                 }, {
-                    prov: "西藏自治区",
+                    prov: "西藏省",
                     label: "拉萨市"
                 }, {
-                    prov: "西藏自治区",
+                    prov: "西藏省",
                     label: "昌都地区"
                 }, {
-                    prov: "西藏自治区",
+                    prov: "西藏省",
                     label: "山南地区"
                 }, {
-                    prov: "西藏自治区",
+                    prov: "西藏省",
                     label: "日喀则地区"
                 }, {
-                    prov: "西藏自治区",
+                    prov: "西藏省",
                     label: "那曲地区"
                 }, {
-                    prov: "西藏自治区",
+                    prov: "西藏省",
                     label: "阿里地区"
                 }, {
-                    prov: "西藏自治区",
+                    prov: "西藏省",
                     label: "林芝地区"
                 }, {
                     prov: "陕西省",
@@ -1176,76 +1205,76 @@
                     prov: "青海省",
                     label: "海西蒙古族藏族自治州"
                 }, {
-                    prov: "宁夏回族自治区",
+                    prov: "宁夏省",
                     label: "银川市"
                 }, {
-                    prov: "宁夏回族自治区",
+                    prov: "宁夏省",
                     label: "石嘴山市"
                 }, {
-                    prov: "宁夏回族自治区",
+                    prov: "宁夏省",
                     label: "吴忠市"
                 }, {
-                    prov: "宁夏回族自治区",
+                    prov: "宁夏省",
                     label: "固原市"
                 }, {
-                    prov: "宁夏回族自治区",
+                    prov: "宁夏省",
                     label: "中卫市"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "乌鲁木齐市"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "克拉玛依市"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "吐鲁番地区"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "哈密地区"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "昌吉回族自治州"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "博尔塔拉蒙古自治州"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "巴音郭楞蒙古自治州"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "阿克苏地区"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "克孜勒苏柯尔克孜自治州"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "喀什地区"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "和田地区"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "伊犁哈萨克自治州"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "塔城地区"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "阿勒泰地区"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "自治区直辖县级行政区划"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "石河子市"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "阿拉尔市"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "图木舒克市"
                 }, {
-                    prov: "新疆维吾尔自治区",
+                    prov: "新疆省",
                     label: "五家渠市"
                 }, {
                     prov: "台湾省",
@@ -1272,35 +1301,30 @@
                     prov: "台湾省",
                     label: "省直辖"
                 }, {
-                    prov: "香港特别行政区",
+                    prov: "香港",
                     label: "香港岛"
                 }, {
-                    prov: "香港特别行政区",
+                    prov: "香港",
                     label: "九龙"
                 }, {
-                    prov: "香港特别行政区",
+                    prov: "香港",
                     label: "新界"
                 }, {
-                    prov: "澳门特别行政区",
+                    prov: "澳门",
                     label: "澳门半岛"
                 }, {
-                    prov: "澳门特别行政区",
+                    prov: "澳门",
                     label: "澳门离岛"
                 }, {
-                    prov: "澳门特别行政区",
+                    prov: "澳门",
                     label: "无堂区划分区域"
                 }];
                 for (var val of allCity) {
                     if (prov == val.prov) {
-                        console.log(val);
                         tempCity.push({label: val.label, value: val.label})
                     }
                 }
                 this.citys = tempCity;
-            },
-            getCity: function (city) {
-                console.log(city);
-                console.log(this.selectCity)
             }
         },
         mounted: function () {
@@ -1318,8 +1342,12 @@
                     self.form.nickname = data.data.profile.nickname;
                     self.form.gender = data.data.profile.gender;
                     self.form.birthday = data.data.profile.birthday;
-                    self.form.province = data.data.profile.province;
-                    self.form.city = data.data.profile.city;
+                    if (self.form.province !== null) {
+                        self.form.province = data.data.profile.province;
+                    }
+                    if (self.form.city !== null) {
+                        self.form.city = data.data.profile.city;
+                    }
                     self.form.introduction = data.data.profile.introduction;
                     self.form.website = data.data.profile.website;
                 } else {
@@ -1328,6 +1356,6 @@
                     self.$message.error('服务器出错了，预加载数据失败');
                 }
             });
-        }
+        },
     }
 </script>
