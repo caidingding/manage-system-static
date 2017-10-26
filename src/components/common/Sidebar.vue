@@ -26,18 +26,18 @@
             return {
                 items: [
                     {
-                        icon: 'el-icon-menu',
+                        icon: 'el-icon-share',
                         index: '1',
                         title: '群组管理',
                         subs: [
                             {
-                                index: 'basetable',
-                                title: '基础表格'
+                                index: 'mygroups',
+                                title: '我的群组'
                             }
                         ]
                     },
                     {
-                        icon: 'el-icon-date',
+                        icon: 'el-icon-document',
                         index: '2',
                         title: '内容管理',
                         subs: [

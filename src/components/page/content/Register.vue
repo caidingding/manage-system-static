@@ -27,7 +27,7 @@
 </template>
 
 <script>
-    import ApiUtils from '../../utils/ApiUtils';
+    import ApiUtils from '../../../utils/ApiUtils';
 
     export default {
         data: function () {

@@ -32,4 +32,12 @@ ApiUtils.changeProfile = params => {
     return axios.post(`${base}/api/profile/change`, params).then(res => res.data);
 };
 
+ApiUtils.getMyGroups = params => {
+    return axios.get(`${base}/api/mygroups/get`, {params: params}).then(res => res.data);
+};
+
+ApiUtils.createGroups = params => {
+    return axios.post(`${base}/api/group/create`, params).then(res => res.data);
+};
+
 export default ApiUtils;
