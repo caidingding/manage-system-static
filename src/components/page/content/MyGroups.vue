@@ -163,7 +163,8 @@
             },
             handleManange(index, row) {
                 //管理按钮
-                this.$message('编辑第' + (index + 1) + '行');
+                let groupId = row.id;
+                this.$router.push({path: 'manangegroup', query:{groupId: groupId}});
             },
             handleViewDetail(index, row) {
                 //查看详情

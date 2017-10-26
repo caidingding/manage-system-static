@@ -31,7 +31,7 @@
                         title: '群组管理',
                         subs: [
                             {
-                                index: 'mygroups',
+                                index: '/manage/mygroups',
                                 title: '我的群组'
                             }
                         ]
@@ -53,11 +53,11 @@
                         title: '个人设置',
                         subs: [
                             {
-                                index: 'password',
+                                index: '/manage/password',
                                 title: '密码修改'
                             },
                             {
-                                index: 'profile',
+                                index: '/manage/profile',
                                 title: '个人资料'
                             },
                         ]
@@ -68,39 +68,39 @@
                         title: '参考',
                         subs: [
                             {
-                                index: 'readme',
+                                index: '/manage/readme',
                                 title: '自述'
                             },
                             {
-                                index: 'basetable',
+                                index: '/manage/basetable',
                                 title: '基础表格'
                             },
                             {
-                                index: 'vuetable',
+                                index: '/manage/vuetable',
                                 title: 'Vue表格组件'
                             },
                             {
-                                index: 'baseform',
+                                index: '/manage/baseform',
                                 title: '基本表单'
                             },
                             {
-                                index: 'vueeditor',
+                                index: '/manage/vueeditor',
                                 title: '编辑器'
                             },
                             {
-                                index: 'markdown',
+                                index: '/manage/markdown',
                                 title: 'markdown'
                             },
                             {
-                                index: 'upload',
+                                index: '/manage/upload',
                                 title: '文件上传'
                             },
                             {
-                                index: 'basecharts',
+                                index: '/manage/basecharts',
                                 title: '图表'
                             },
                             {
-                                index: 'drag',
+                                index: '/manage/drag',
                                 title: '拖拽'
                             }
                         ]
