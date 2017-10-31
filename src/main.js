@@ -3,7 +3,7 @@ import App from './App';
 import axios from 'axios';
 //ElementUI 相关
 import ElementUI from 'element-ui';
-import 'element-ui/lib/theme-default/index.css';    // 默认主题
+import 'element-ui/lib/theme-chalk/index.css';    // 默认主题
 import "babel-polyfill";
 //路由相关
 import VueRouter from 'vue-router';

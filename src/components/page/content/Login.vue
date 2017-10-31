@@ -68,6 +68,12 @@
                                 //失败提示
                                 self.$message.error(data.message);
                             }
+                        }).catch((msg) => {
+                            //提示网络错误
+                            self.$notify.error({
+                                title: '网络异常',
+                                message: msg.toString()
+                            });
                         });
 
                     } else {

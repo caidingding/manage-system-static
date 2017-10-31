@@ -71,12 +71,8 @@
                 <template scope="scope">
                     <el-button v-if="scope.row.owner"
                                size="small"
-                               type="danger"
-                               @click="handleManange(scope.$index, scope.row)">管理
-                    </el-button>
-                    <el-button v-if="scope.row.owner == false"
-                               size="small"
-                               @click="handleViewDetail(scope.$index, scope.row)">查看详情
+                               type="success"
+                               @click="handleManage(scope.$index, scope.row)">管理
                     </el-button>
                 </template>
             </el-table-column>
@@ -161,14 +157,10 @@
                 //筛选标签
                 return row.owner === value;
             },
-            handleManange(index, row) {
+            handleManage(index, row) {
                 //管理按钮
                 let groupId = row.id;
                 this.$router.push({path: 'manangegroup', query:{groupId: groupId}});
-            },
-            handleViewDetail(index, row) {
-                //查看详情
-                this.$message.error('删除第' + (index + 1) + '行');
             },
             createGroup() {
                 //添加用户组
