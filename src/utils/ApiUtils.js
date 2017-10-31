@@ -88,4 +88,13 @@ ApiUtils.changeGroupMemberType = params => {
     return axios.post(`${base}/api/group/members/type/change`, params).then(res => res.data);
 };
 
+//获取所有创建的群组，包含自己创建的和拉进自己的
+ApiUtils.getAllGroups = params => {
+    return axios.get(`${base}/api/groups/all`, {params: params}).then(res => res.data);
+};
+
+//用户申请加入群组
+ApiUtils.changeGroupApply = params => {
+    return axios.post(`${base}/api/group/apply/change`, params).then(res => res.data);
+};
 export default ApiUtils;

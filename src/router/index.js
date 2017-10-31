@@ -16,6 +16,10 @@ const routers = [
                 component: resolve => require(['../components/page/content/ManageGroup.vue'], resolve),
             },
             {
+                path: 'grouphall',
+                component: resolve => require(['../components/page/content/GroupHall.vue'], resolve),
+            },
+            {
                 path: 'password',
                 component: resolve => require(['../components/page/content/Password.vue'], resolve)
             },

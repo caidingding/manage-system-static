@@ -33,6 +33,10 @@
                             {
                                 index: '/manage/mygroups',
                                 title: '我的群组'
+                            },
+                            {
+                                index: '/manage/grouphall',
+                                title: '群组大厅'
                             }
                         ]
                     },
