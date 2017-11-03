@@ -1,16 +1,29 @@
 <template>
     <div class="header">
         <div class="logo">内容平台</div>
-        <div class="user-info">
-            <el-dropdown trigger="click" @command="handleCommand">
+        <div class="right-menus">
+            <div class="menu">
+                <el-menu
+                    mode="horizontal"
+                    @select="handleHeaderMenuSelect"
+                    background-color="#242f42"
+                    text-color="#fff"
+                    active-text-color="#ffd04b">
+                    <el-menu-item index="manage">管理后台</el-menu-item>
+                    <el-menu-item index="wbox">WBOX服务平台</el-menu-item>
+                </el-menu>
+            </div>
+            <div class="user-info">
+                <el-dropdown trigger="click" @command="handleCommand">
                 <span class="el-dropdown-link">
                     <img class="user-logo" v-bind:src="userLogo">
                     {{username}}
                 </span>
-                <el-dropdown-menu slot="dropdown">
-                    <el-dropdown-item command="loginout">退出</el-dropdown-item>
-                </el-dropdown-menu>
-            </el-dropdown>
+                    <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item command="loginout">退出</el-dropdown-item>
+                    </el-dropdown-menu>
+                </el-dropdown>
+            </div>
         </div>
     </div>
 </template>
@@ -44,6 +57,15 @@
                     CookieUtils.deleteCookie('cp_remember_token');
                     this.$router.push('/login');
                 }
+            },
+            handleHeaderMenuSelect(key, keyPath) {
+                if (key == 'manage') {
+                    //管理后台
+                    this.$router.push({path: '/manage'});
+                } else if (key == 'wbox') {
+                    //wbox服务后台
+                    console.log(key);
+                }
             }
         }
     }
@@ -65,8 +87,21 @@
         text-align: center;
     }
 
-    .user-info {
+    .right-menus {
         float: right;
+        padding-right: 50px;
+    }
+
+    .menu {
+        height: 60px;
+        float: left;
+        padding-right: 50px;
+        font-size: 16px;
+        color: #fff;
+    }
+
+    .user-info {
+        float: left;
         padding-right: 50px;
         font-size: 16px;
         color: #fff;

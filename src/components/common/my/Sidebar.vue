@@ -73,10 +73,6 @@
                                 title: '基础表格'
                             },
                             {
-                                index: '/my/vuetable',
-                                title: 'Vue表格组件'
-                            },
-                            {
                                 index: '/my/baseform',
                                 title: '基本表单'
                             },

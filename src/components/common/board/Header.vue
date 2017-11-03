@@ -6,7 +6,7 @@
                 <el-menu
                     :default-active="activeIndex2"
                     mode="horizontal"
-                    @select="handleSelect"
+                    @select="handleHeaderMenuSelect"
                     background-color="#242f42"
                     text-color="#fff"
                     active-text-color="#ffd04b">
@@ -64,6 +64,11 @@
                     CookieUtils.deleteCookie('cp_remember_token');
                     this.$router.push('/login');
                 }
+            },
+            handleHeaderMenuSelect(key, keyPath) {
+                console.log(key);
+                console.log('----');
+                console.log(keyPath);
             }
         }
     }
