@@ -14,7 +14,7 @@ CookieUtils.getCookie = function (key) {
 CookieUtils.setCookie = function (key, value, expireDays) {
     let expireDate = new Date();
     expireDate.setTime(expireDate.getTime() + expireDays * 24 * 60 * 60 * 1000);
-    document.cookie = key + '=' + escape(value) + ((expireDays == null) ? '' : ';expires=' + expireDate.toUTCString());
+    document.cookie = key + '=' + escape(value) + ((expireDays == null) ? '' : ';expires=' + expireDate.toUTCString()) + ";path=/;";
 
 };
 
