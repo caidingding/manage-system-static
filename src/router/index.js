@@ -4,29 +4,42 @@ const routers = [
         redirect: '/login'
     },
     {
-        path: '/manage',
-        component: resolve => require(['../components/common/Home.vue'], resolve),
+        path: '/login',
+        meta: {ignoreAuth: true},
+        component: resolve => require(['../components/page/content/Login.vue'], resolve)
+    },
+    {
+        path: '/register',
+        meta: {ignoreAuth: true},
+        component: resolve => require(['../components/page/content/Register.vue'], resolve)
+    },
+    {
+        //个人面板
+        path: '/my',
+        component: resolve => require(['../components/common/my/Home.vue'], resolve),
         children: [
             {
                 path: 'mygroups',
-                component: resolve => require(['../components/page/content/MyGroups.vue'], resolve),
+                component: resolve => require(['../components/page/content/my/MyGroups.vue'], resolve),
             },
             {
-                path: 'manangegroup',
-                component: resolve => require(['../components/page/content/ManageGroup.vue'], resolve),
-            },
-            {
-                path: 'grouphall',
-                component: resolve => require(['../components/page/content/GroupHall.vue'], resolve),
+                path: 'joingroup',
+                component: resolve => require(['../components/page/content/my/JoinGroup.vue'], resolve),
             },
             {
                 path: 'password',
-                component: resolve => require(['../components/page/content/Password.vue'], resolve)
+                component: resolve => require(['../components/page/content/my/Password.vue'], resolve)
             },
             {
                 path: 'profile',
-                component: resolve => require(['../components/page/content/Profile.vue'], resolve)
+                component: resolve => require(['../components/page/content/my/Profile.vue'], resolve)
             },
+            {
+                path: 'avatarupload',
+                component: resolve => require(['../components/page/content/my/AvatarUpload.vue'], resolve)
+            },
+
+            //参考内容
             {
                 path: 'readme',
                 component: resolve => require(['../components/page/content/Readme.vue'], resolve)
@@ -66,14 +79,50 @@ const routers = [
         ]
     },
     {
-        path: '/login',
-        meta: {ignoreAuth: true},
-        component: resolve => require(['../components/page/content/Login.vue'], resolve)
+        //管理面板
+        path: '/board',
+        component: resolve => require(['../components/common/board/Home.vue'], resolve),
+        children: [
+            {
+                path: 'readme',
+                component: resolve => require(['../components/page/content/board/Readme.vue'], resolve),
+            },
+        ]
     },
     {
-        path: '/register',
-        meta: {ignoreAuth: true},
-        component: resolve => require(['../components/page/content/Register.vue'], resolve)
+        //管理面板
+        path: '/manage',
+        component: resolve => require(['../components/common/manage/Home.vue'], resolve),
+        children: [
+            {
+                path: 'manangegroups',
+                component: resolve => require(['../components/page/content/manage/ManageGroups.vue'], resolve),
+            },
+            {
+                path: 'managegroup',
+                component: resolve => require(['../components/page/content/manage/ManageGroup.vue'], resolve),
+            },
+            {
+                path: 'joingroup',
+                component: resolve => require(['../components/page/content/my/JoinGroup.vue'], resolve),
+            },
+            {
+                path: 'managecontents',
+                component: resolve => require(['../components/page/content/manage/ManageContents.vue'], resolve),
+            },
+            {
+                path: 'password',
+                component: resolve => require(['../components/page/content/my/Password.vue'], resolve)
+            },
+            {
+                path: 'profile',
+                component: resolve => require(['../components/page/content/my/Profile.vue'], resolve)
+            },
+            {
+                path: 'avatarupload',
+                component: resolve => require(['../components/page/content/my/AvatarUpload.vue'], resolve)
+            }
+        ]
     },
 ];
 export default routers;

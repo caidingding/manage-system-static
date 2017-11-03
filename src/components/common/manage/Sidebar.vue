@@ -1,6 +1,6 @@
 <template>
     <div class="sidebar">
-        <el-menu :default-active="onRoutes" class="el-menu-vertical-demo" theme="dark" unique-opened router>
+        <el-menu :default-active="onRoutes" class="el-menu-vertical-manage" theme="dark" unique-opened router>
             <template v-for="item in items">
                 <template v-if="item.subs">
                     <el-submenu :index="item.index">
@@ -31,12 +31,12 @@
                         title: '群组管理',
                         subs: [
                             {
-                                index: '/manage/mygroups',
-                                title: '我的群组'
+                                index: '/manage/manangegroups',
+                                title: '管理群组'
                             },
                             {
-                                index: '/manage/grouphall',
-                                title: '群组大厅'
+                                index: '/manage/joingroup',
+                                title: '加入群组'
                             }
                         ]
                     },
@@ -46,8 +46,8 @@
                         title: '内容管理',
                         subs: [
                             {
-                                index: 'baseform',
-                                title: '基本表单'
+                                index: '/manage/managecontents',
+                                title: '管理内容'
                             },
                         ]
                     },
@@ -64,51 +64,13 @@
                                 index: '/manage/profile',
                                 title: '个人资料'
                             },
-                        ]
-                    },
-                    {
-                        icon: 'el-icon-date',
-                        index: '4',
-                        title: '参考',
-                        subs: [
                             {
-                                index: '/manage/readme',
-                                title: '自述'
-                            },
-                            {
-                                index: '/manage/basetable',
-                                title: '基础表格'
-                            },
-                            {
-                                index: '/manage/vuetable',
-                                title: 'Vue表格组件'
-                            },
-                            {
-                                index: '/manage/baseform',
-                                title: '基本表单'
-                            },
-                            {
-                                index: '/manage/vueeditor',
-                                title: '编辑器'
-                            },
-                            {
-                                index: '/manage/markdown',
-                                title: 'markdown'
-                            },
-                            {
-                                index: '/manage/upload',
-                                title: '文件上传'
-                            },
-                            {
-                                index: '/manage/basecharts',
-                                title: '图表'
-                            },
-                            {
-                                index: '/manage/drag',
-                                title: '拖拽'
+                                index: '/manage/avatarupload',
+                                title: '头像上传'
                             }
                         ]
-                    }
+                    },
+
                 ]
             }
         },
@@ -124,10 +86,10 @@
     .sidebar {
         display: block;
         position: absolute;
-        width: 250px;
+        width: 200px;
         height: auto;
         left: 0;
-        top: 70px;
+        top: 60px;
         bottom: 0;
         background: #2E363F;
     }
@@ -135,4 +97,5 @@
     .sidebar > ul {
         height: 100%;
     }
+
 </style>

@@ -4,7 +4,7 @@
         <div class="user-info">
             <el-dropdown trigger="click" @command="handleCommand">
                 <span class="el-dropdown-link">
-                    <img class="user-logo" src="../../../static/img/img.jpg">
+                    <img class="user-logo" v-bind:src="userLogo">
                     {{username}}
                 </span>
                 <el-dropdown-menu slot="dropdown">
@@ -15,18 +15,23 @@
     </div>
 </template>
 <script>
-    import CookieUtils from '../../utils/CookieUtils';
+    import CookieUtils from '../../../utils/CookieUtils';
 
     export default {
         data() {
             return {
-                name: 'username'
+                name: 'username',
+                logo: '../../../static/img/img.jpg',
             }
         },
         computed: {
             username() {
                 let username = localStorage.getItem('cp_username');
                 return username ? username : this.name;
+            },
+            userLogo() {
+                let userlogo = localStorage.getItem('cp_userlogo');
+                return userlogo == null || userlogo == 'null' ? this.logo : userlogo;
             }
         },
         methods: {
@@ -48,15 +53,15 @@
         position: relative;
         box-sizing: border-box;
         width: 100%;
-        height: 70px;
+        height: 60px;
         font-size: 22px;
-        line-height: 70px;
+        line-height: 60px;
         color: #fff;
     }
 
     .header .logo {
         float: left;
-        width: 250px;
+        width: 150px;
         text-align: center;
     }
 
@@ -79,13 +84,13 @@
     .user-info .user-logo {
         position: absolute;
         left: 0;
-        top: 15px;
+        top: 10px;
         width: 40px;
         height: 40px;
         border-radius: 50%;
     }
 
-    .el-dropdown-menu__item {
+    el-dropdown-item {
         text-align: center;
     }
 </style>

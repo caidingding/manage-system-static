@@ -76,7 +76,7 @@ ApiUtils.AddMemberToGroup = params => {
     return axios.post(`${base}/api/group/members/add`, params).then(res => res.data);
 };
 //获取组里的用户列表
-ApiUtils.getGroupMembers  = params => {
+ApiUtils.getGroupMembers = params => {
     return axios.get(`${base}/api/group/members`, {params: params}).then(res => res.data);
 };
 //从组里移除用户
@@ -97,4 +97,23 @@ ApiUtils.getAllGroups = params => {
 ApiUtils.changeGroupApply = params => {
     return axios.post(`${base}/api/group/apply/change`, params).then(res => res.data);
 };
+
+//获取我的内容
+ApiUtils.getMyTreeRootsByGroupIds = params => {
+    return axios.get(`${base}/api/tree/root/get/group`, {params: params}).then(res => res.data);
+};
+//创建content root
+ApiUtils.createContentTreeRoot = params => {
+    return axios.post(`${base}/api/tree/root/create`, params).then(res => res.data);
+};
+
+//修改content root
+ApiUtils.editContentTreeRoot = params => {
+    return axios.post(`${base}/api/tree/root/update`, params).then(res => res.data);
+};
+
+
+//urls
+ApiUtils.avatarUploadUrl = `${base}/api/user/avatar/upload`;
+
 export default ApiUtils;

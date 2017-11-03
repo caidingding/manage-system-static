@@ -27,8 +27,8 @@
 </template>
 
 <script>
-    import ApiUtils from '../../../utils/ApiUtils';
-    import CookieUtils from '../../../utils/CookieUtils';
+    import ApiUtils from '../../../../utils/ApiUtils';
+    import CookieUtils from '../../../../utils/CookieUtils';
 
     export default {
         data: function () {

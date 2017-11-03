@@ -54,6 +54,8 @@
                             if (data.code === 0) {
                                 //验证成功!
                                 localStorage.setItem('cp_username', self.ruleForm.username);
+                                localStorage.setItem('cp_uid', data.data.id);
+                                localStorage.setItem('cp_userlogo', data.data.avatar);
                                 CookieUtils.setCookie('cp_uid', data.data.id, 1);
                                 CookieUtils.setCookie('cp_username', data.data.name, 1);
                                 CookieUtils.setCookie('cp_email', data.data.email, 1);
@@ -62,7 +64,7 @@
                                 if (redirect) {
                                     self.$router.push({path: redirect});
                                 } else {
-                                    self.$router.push('/manage');
+                                    self.$router.push('/my');
                                 }
                             } else {
                                 //失败提示
