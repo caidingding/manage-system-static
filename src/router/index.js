@@ -120,5 +120,28 @@ const routers = [
             }
         ]
     },
+    {
+        //wbox服务平台
+        path: '/wbox',
+        component: resolve => require(['../components/common/wbox/Home.vue'], resolve),
+        children: [
+            {
+                path: 'myprojects',
+                component: resolve => require(['../components/page/wbox/myprojects.vue'], resolve),
+            },
+            {
+                path: 'createproject',
+                component: resolve => require(['../components/page/wbox/createproject.vue'], resolve),
+            },
+            {
+                path: 'mywboxs',
+                component: resolve => require(['../components/page/wbox/mywboxs.vue'], resolve),
+            },
+            {
+                path: 'createwbox',
+                component: resolve => require(['../components/page/wbox/createwbox.vue'], resolve),
+            },
+        ]
+    },
 ];
 export default routers;
