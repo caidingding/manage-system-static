@@ -20,6 +20,19 @@ a{text-decoration: none}
     box-sizing: border-box;
     overflow-y: scroll;
 }
+
+.board-content {
+    background: none repeat scroll 0 0 #fff;
+    position: absolute;
+    left: 5px;
+    right: 0;
+    top: 70px;
+    bottom:0;
+    width: 100%;
+    padding:40px;
+    box-sizing: border-box;
+    overflow-y: scroll;
+}
 .crumbs{
     margin-bottom: 20px;
 }

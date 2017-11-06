@@ -1,23 +1,23 @@
 <template>
     <div class="header">
-        <div class="logo">内容平台</div>
+        <div class="logo">内容平台群组功能</div>
         <div class="right-menus">
             <div class="menu">
                 <el-menu
-                    :default-active="activeIndex2"
                     mode="horizontal"
                     @select="handleHeaderMenuSelect"
                     background-color="#242f42"
                     text-color="#fff"
                     active-text-color="#ffd04b">
-                    <el-submenu index="1">
+                    <el-submenu index="wiki" v-if="hasWiki">
                         <template slot="title">WIKI内容</template>
-                        <el-menu-item index="2-1">选项1</el-menu-item>
-                        <el-menu-item index="2-2">选项2</el-menu-item>
-                        <el-menu-item index="2-3">选项3</el-menu-item>
+                        <el-menu-item :index="''+subIndex" v-for="(subItem,subIndex) in wikiRoots">
+                            {{subItem.id}}-{{subItem.name}}
+                        </el-menu-item>
                     </el-submenu>
-                    <el-menu-item index="2">处理中心</el-menu-item>
-                    <el-menu-item index="3"><a href="https://www.ele.me" target="_blank">订单管理</a></el-menu-item>
+                    <el-menu-item index="my">个人中心</el-menu-item>
+                    <el-menu-item index="manage">管理后台</el-menu-item>
+                    <el-menu-item index="wbox">WBOX服务平台</el-menu-item>
                 </el-menu>
             </div>
             <div class="user-info">
@@ -36,12 +36,16 @@
 </template>
 <script>
     import CookieUtils from '../../../utils/CookieUtils';
+    import ApiUtils from '../../../utils/ApiUtils';
 
     export default {
         data() {
             return {
                 name: 'username',
                 logo: '../../../static/img/img.jpg',
+                hasWiki: true,
+                wikiRoots: [],
+                groupId: this.$route.params.gid,
             }
         },
         computed: {
@@ -66,10 +70,55 @@
                 }
             },
             handleHeaderMenuSelect(key, keyPath) {
-                console.log(key);
-                console.log('----');
-                console.log(keyPath);
+                if (key == 'my') {
+                    //管理后台
+                    this.$router.push({path: '/my'});
+                } else if (key == 'manage') {
+                    //管理后台
+                    this.$router.push({path: '/manage'});
+                } else if (key == 'wbox') {
+                    //wbox服务后台
+                    this.$router.push({path: '/wbox'});
+                }
+                if (keyPath.length === 2) {
+                    if (keyPath[0] === 'wiki') {
+                        let treeRootId = keyPath[1];//tree的root id
+                        //跳转到对应的wiki页面
+                        let wikiPath = '/board/' + this.groupId + '/wiki/' + treeRootId;
+                        console.log('wikiPath:' + wikiPath);
+                        this.$router.push({path: wikiPath});
+                    }
+                }
+            },
+            getWikiRoots() {
+                let self = this;
+                let groupId = self.$route.params.gid;
+                //取群组列表数据到表中
+                let params = {
+                        username: localStorage.getItem('cp_username'),
+                        groupId: groupId
+                    }
+                ;
+                ApiUtils.getAuthorizedTreeRoots(params).then(function (data) {
+                    if (data.code === 0) {
+                        if (data.data.length == 0) {
+                            self.hasWiki = false;
+                        } else {
+                            self.hasWiki = true;
+                        }
+                        self.wikiRoots = data.data;
+                        console.log(data.data);
+                        console.log(self.hasWiki);
+                    } else {
+                        //失败提示
+                        console.log(data.message);
+                        self.$message.error(data.message);
+                    }
+                });
             }
+        },
+        created: function () {
+            this.getWikiRoots();
         }
     }
 </script>
@@ -86,7 +135,7 @@
 
     .header .logo {
         float: left;
-        width: 200px;
+        width: 250px;
         text-align: center;
     }
 

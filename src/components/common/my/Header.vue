@@ -1,6 +1,6 @@
 <template>
     <div class="header">
-        <div class="logo">内容平台</div>
+        <div class="logo">内容平台个人中心</div>
         <div class="right-menus">
             <div class="menu">
                 <el-menu
@@ -64,7 +64,7 @@
                     this.$router.push({path: '/manage'});
                 } else if (key == 'wbox') {
                     //wbox服务后台
-                    console.log(key);
+                    this.$router.push({path: '/wbox'});
                 }
             }
         }
@@ -83,7 +83,7 @@
 
     .header .logo {
         float: left;
-        width: 150px;
+        width: 250px;
         text-align: center;
     }
 

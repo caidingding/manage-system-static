@@ -10,6 +10,7 @@
                     text-color="#fff"
                     active-text-color="#ffd04b">
                     <el-menu-item index="my">个人中心</el-menu-item>
+                    <el-menu-item index="manage">管理后台</el-menu-item>
                     <el-menu-item index="wbox">WBOX服务平台</el-menu-item>
                 </el-menu>
             </div>
@@ -64,7 +65,7 @@
                     this.$router.push({path: '/my'});
                 } else if (key == 'wbox') {
                     //wbox服务后台
-                    console.log(key);
+                    this.$router.push({path: '/wbox'});
                 }
             }
         }
