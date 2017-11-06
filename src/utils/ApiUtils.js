@@ -112,6 +112,10 @@ ApiUtils.editContentTreeRoot = params => {
     return axios.post(`${base}/api/tree/root/update`, params).then(res => res.data);
 };
 
+//根据用户名和组获取有权限的树根节点
+ApiUtils.getAuthorizedTreeRoots = params => {
+    return axios.get(`${base}/api/tree/root/authorized/get`, {params: params}).then(res => res.data);
+};
 
 //urls
 ApiUtils.avatarUploadUrl = `${base}/api/user/avatar/upload`;

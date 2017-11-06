@@ -76,12 +76,12 @@ const routers = [
     },
     {
         //管理面板
-        path: '/board',
+        path: '/board/:gid',
         component: resolve => require(['../components/common/board/Home.vue'], resolve),
         children: [
             {
-                path: 'readme',
-                component: resolve => require(['../components/page/content/board/Readme.vue'], resolve),
+                path: 'wiki/:rootId',
+                component: resolve => require(['../components/page/content/board/Wiki.vue'], resolve),
             },
         ]
     },
