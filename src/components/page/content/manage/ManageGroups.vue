@@ -136,7 +136,7 @@
                     username: localStorage.getItem('cp_username')
                 };
                 ApiUtils.getMyGroups(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         self.tableData = data.data;
                     } else {
                         //失败提示
@@ -178,7 +178,7 @@
                             desc: self.createGroupForm.groupDesc
                         };
                         ApiUtils.createGroups(params).then(function (data) {
-                            if (data.code === 0) {
+                            if (data.code === 100) {
                                 //创建成功!
                                 let successMsg = '创建群组:' + self.createGroupForm.groupName + ' 成功！';
                                 self.$message.success(successMsg);

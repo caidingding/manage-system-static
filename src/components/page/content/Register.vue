@@ -45,7 +45,7 @@
                 };
                 ApiUtils.checkUserName(params).then(
                     function (data) {
-                        if (data.code === 0 || data.code === 4) {
+                        if (data.code === 100 || data.code === 104) {
                             callback();
                         } else {
                             callback(new Error(data.message));
@@ -107,7 +107,7 @@
                             password: self.ruleForm.password
                         };
                         ApiUtils.register(params).then(function (data) {
-                            if (data.code === 0) {
+                            if (data.code === 100) {
                                 //注册成功!
                                 self.$message.success('注册成功!3秒后转入登录页');
                                 localStorage.setItem('cp_username', self.ruleForm.username);

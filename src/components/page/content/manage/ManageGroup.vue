@@ -294,7 +294,7 @@
                     }
                 ;
                 ApiUtils.getOwnedGroupInfo(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         self.groupMsg = data.data;
                     } else {
                         //失败提示
@@ -320,7 +320,7 @@
                             desc: self.editGroupForm.groupDesc
                         };
                         ApiUtils.editGroups(params).then(function (data) {
-                            if (data.code === 0) {
+                            if (data.code === 100) {
                                 //创建成功!
                                 let successMsg = '修改群组:' + self.editGroupForm.groupName + ' 成功！';
                                 self.$message.success(successMsg);
@@ -349,7 +349,7 @@
                     groupId: groupId
                 };
                 ApiUtils.getApplyInGroupMembers(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         self.applyTableData = data.data;
                     } else {
                         //失败提示
@@ -366,7 +366,7 @@
                     groupId: groupId
                 };
                 ApiUtils.getGroupMembers(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         self.membersTableData = data.data;
                     } else {
                         //失败提示
@@ -387,7 +387,7 @@
                     apply: apply
                 };
                 ApiUtils.changeGroupMembersApply(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         //创建成功!
                         let successMsg = '已通过';
                         self.$message.success(successMsg);
@@ -412,7 +412,7 @@
                     apply: apply
                 };
                 ApiUtils.changeGroupMembersApply(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         //创建成功!
                         let successMsg = '已拒绝';
                         self.$message.success(successMsg);
@@ -432,7 +432,7 @@
                         name: queryString
                     };
                     ApiUtils.queryUserName(params).then(function (data) {
-                        if (data.code === 0) {
+                        if (data.code === 100) {
                             //查找到数据了
                             results = data.data;
                             // 调用 callback 返回建议列表的数据
@@ -456,7 +456,7 @@
                     userType: self.memberType
                 };
                 ApiUtils.AddMemberToGroup(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         //添加成功，提示并刷新组成员表
                         self.$message.success('添加成员成功');
                         self.getMembersData();
@@ -475,7 +475,7 @@
                     username: row.name,
                 };
                 ApiUtils.delMemberFromGroup(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         //移除成功，提示并刷新组成员表
                         self.$message.success('移除成员成功');
                         self.getMembersData();
@@ -494,7 +494,7 @@
                     userType: 1
                 };
                 ApiUtils.changeGroupMemberType(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         //移除成功，提示并刷新组成员表
                         self.$message.success('升级成功');
                         self.getMembersData();
@@ -514,7 +514,7 @@
                     userType: 0
                 };
                 ApiUtils.changeGroupMemberType(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         //移除成功，提示并刷新组成员表
                         self.$message.success('更改成功');
                         self.getMembersData();

@@ -51,7 +51,7 @@
                             password: self.ruleForm.password
                         };
                         ApiUtils.login(params).then(function (data) {
-                            if (data.code === 0) {
+                            if (data.code === 100) {
                                 //验证成功!
                                 localStorage.setItem('cp_username', self.ruleForm.username);
                                 localStorage.setItem('cp_uid', data.data.id);

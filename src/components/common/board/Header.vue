@@ -99,7 +99,7 @@
                     }
                 ;
                 ApiUtils.getAuthorizedTreeRoots(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         if (data.data.length == 0) {
                             self.hasWiki = false;
                         } else {

@@ -162,7 +162,7 @@
                             website: self.form.website
                         };
                         ApiUtils.changeProfile(params).then(function (data) {
-                            if (data.code === 0) {
+                            if (data.code === 100) {
                                 //修改成功!
                                 self.$message.success('个人信息修改成功！');
                             } else {
@@ -1334,7 +1334,7 @@
                 username: localStorage.getItem('cp_username')
             };
             ApiUtils.getProfile(params).then(function (data) {
-                if (data.code === 0) {
+                if (data.code === 100) {
                     //修改密码成功!
                     self.form.uid = data.data.user.id;
                     self.form.email = data.data.user.email;

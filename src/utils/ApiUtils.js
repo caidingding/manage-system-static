@@ -142,10 +142,41 @@ ApiUtils.deleteTreeNode = params => {
     return axios.post(`${base}/api/tree/node/delete`, params).then(res => res.data);
 };
 
+//删除对象成功
+ApiUtils.deleteTreeObject = params => {
+    return axios.post(`${base}/api/tree/object/delete`, params).then(res => res.data);
+};
+
+//根据node id获取排好序的树内容对象
+ApiUtils.getSortedTreeObjects = params => {
+    return axios.get(`${base}/api/tree/objects/sorted/get`, {params: params}).then(res => res.data);
+};
+
+//根据node id获取排好序的树附件列表
+ApiUtils.getTreeAttachments = params => {
+    return axios.get(`${base}/api/tree/attachments/get`, {params: params}).then(res => res.data);
+};
+
+//删除树的内容对象
+ApiUtils.deleteTreeObject = params => {
+    return axios.post(`${base}/api/tree/object/delete`, params).then(res => res.data);
+};
+
+//检测用户是否有组的权限
+ApiUtils.checkGroupRight = params => {
+    return axios.post(`${base}/api/group/right/check`, params).then(res => res.data);
+};
+
+ApiUtils.saveTreeObject = params => {
+    return axios.post(`${base}/api/tree/object/save`, params).then(res => res.data);
+};
+
 //一次性加载wiki所有菜单节点数据的URL
 ApiUtils.loadNodesDataUrl = `${base}/api/tree/nodes/load`;
 
 //urls
 ApiUtils.avatarUploadUrl = `${base}/api/user/avatar/upload`;
+
+ApiUtils.treeFileUploadUrl = `${base}/api/tree/file/upload`;
 
 export default ApiUtils;

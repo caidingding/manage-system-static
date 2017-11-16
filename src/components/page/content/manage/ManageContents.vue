@@ -304,7 +304,7 @@
                     groupIds: groupIds
                 };
                 ApiUtils.getMyTreeRootsByGroupIds(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         self.tableData = data.data;
                     } else {
                         //失败提示
@@ -358,7 +358,7 @@
                                 ownerName: self.createContentForm.ownerName,
                             };
                             ApiUtils.createContentTreeRoot(params).then(function (data) {
-                                if (data.code === 0) {
+                                if (data.code === 100) {
                                     //创建成功!
                                     let successMsg = '创建内容:' + self.createContentForm.contentName + ' 成功！';
                                     self.$message.success(successMsg);
@@ -383,7 +383,7 @@
                                 ownerName: self.editContentForm.ownerName,
                             };
                             ApiUtils.editContentTreeRoot(params).then(function (data) {
-                                if (data.code === 0) {
+                                if (data.code === 100) {
                                     //修改成功!
                                     let successMsg = '修改内容:' + self.editContentForm.contentName + ' 成功！';
                                     self.$message.success(successMsg);
@@ -417,7 +417,7 @@
                     username: localStorage.getItem('cp_username'),
                 };
                 ApiUtils.getMyGroups(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         //查询成功,筛选出有管理员权限的群组
                         self.myGroups = data.data;
                         //初始化下拉菜单的群组内容

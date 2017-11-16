@@ -117,7 +117,7 @@
                     username: localStorage.getItem('cp_username')
                 };
                 ApiUtils.getAllGroups(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         self.tableData = data.data;
                     } else {
                         //失败提示
@@ -154,7 +154,7 @@
                     apply: apply
                 };
                 ApiUtils.changeGroupApply(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         //创建成功!
                         let successMsg = '已经申请加入';
                         self.$message.success(successMsg);
@@ -177,7 +177,7 @@
                     apply: apply
                 };
                 ApiUtils.changeGroupApply(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         //创建成功!
                         let successMsg = '已经撤销申请';
                         self.$message.success(successMsg);
@@ -201,7 +201,7 @@
                     apply: apply
                 };
                 ApiUtils.changeGroupApply(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         //创建成功!
                         let successMsg = '已经重新申请加入';
                         self.$message.success(successMsg);

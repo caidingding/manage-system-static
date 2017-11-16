@@ -2,10 +2,13 @@
     <el-container class="el-container">
         <el-aside class="el-aside" width="300px">
             <ztree id="ztreeSide"
+                   ref="ztreeSide"
                    :setting="ztreeSetting"
                    :data="ztreeData"
                    @onClick="nodeClick"
                    @onDrop="nodeDragDrop"
+                   @beforeRename="beforeNodeRename"
+                   @beforeRemove="beforeNodeRemove"
                    @onRemove="nodeRemove"
                    @onRename="nodeRename"
             ></ztree>
@@ -15,44 +18,174 @@
                 <div>
                     <div class="crumbs">
                         <el-breadcrumb separator="/">
-                            <el-breadcrumb-item><i class="el-icon-setting"></i> 自述</el-breadcrumb-item>
+                            <el-breadcrumb-item><i class="el-icon-setting"></i>{{ currentNodeName }}
+                            </el-breadcrumb-item>
                         </el-breadcrumb>
                     </div>
-                    <div class="ms-doc">
-                        <h3>README.md</h3>
-                        <article>
-                            <h1>manage-system</h1>
-                            <p>基于Vue.js 2.x系列 + Element UI 的后台管理系统解决方案</p>
-                            <h2>前言</h2>
-                            <p>
-                                之前在公司用了Vue + Element组件库做了个后台管理系统，基本很多组件可以直接引用组件库的，但是也有一些需求无法满足。像图片裁剪上传、富文本编辑器、图表等这些在后台管理系统中很常见的功能，就需要引用其他的组件才能完成。从寻找组件，到使用组件的过程中，遇到了很多问题，也积累了宝贵的经验。所以我就把开发这个后台管理系统的经验，总结成这个后台管理系统解决方案。</p>
-                            <p>
-                                该方案作为一套多功能的后台框架模板，适用于绝大部分的后台管理系统（Web Management System）开发。基于vue.js,使用vue-cli脚手架快速生成项目目录，引用Element UI组件库，方便开发快速简洁好看的组件。分离颜色样式，支持手动切换主题色，而且很方便使用自定义主题色。</p>
-                            <h2>功能</h2>
-                            <el-checkbox disabled checked>Element UI</el-checkbox>
-                            <br>
-                            <el-checkbox disabled checked>登录/注销</el-checkbox>
-                            <br>
-                            <el-checkbox disabled checked>表格</el-checkbox>
-                            <br>
-                            <el-checkbox disabled checked>表单</el-checkbox>
-                            <br>
-                            <el-checkbox disabled checked>图表</el-checkbox>
-                            <br>
-                            <el-checkbox disabled checked>富文本编辑器</el-checkbox>
-                            <br>
-                            <el-checkbox disabled checked>markdown编辑器</el-checkbox>
-                            <br>
-                            <el-checkbox disabled checked>图片拖拽/裁剪上传</el-checkbox>
-                            <br>
-                            <el-checkbox disabled checked>支持切换主题色</el-checkbox>
-                            <br>
-                            <el-checkbox disabled checked>列表拖拽排序</el-checkbox>
-                            <br>
-                        </article>
+                    <div v-for="(docObject, index) in docObjects" :key="index">
+                        <el-card class="doc-markdown-show-card" :key="index + '_' + 1"
+                                 v-if="docObject != null && docObject.type == 0 && docObject.edit == false">
+                            <!-- 用来展示markDown文档的card -->
+                            <el-col :span="18">
+                            <span class="title-show">
+                                <!-- 放置标题 -->
+                                 <input autocomplete="off" type="text" rows="2" validateevent="true"
+                                        class="input-md-title"
+                                        v-model="docObject.title"
+                                        disabled>
+                            </span>
+                            </el-col>
+                            <el-col :span="6" align="right">
+                                <el-button-group>
+                                    <el-button type="info" plain icon="el-icon-edit" round
+                                               @click="editDoc(index)"
+                                               v-bind:disabled="manageDisabled"></el-button>
+                                    <el-button type="danger" plain icon="el-icon-delete" round
+                                               @click="deleteDoc(index)"
+                                               v-bind:disabled="manageDisabled"></el-button>
+                                </el-button-group>
+                            </el-col>
+                            <el-col :span="24">
+                                <hr class="hr-editor"/>
+                            </el-col>
+                            <el-col :span="24">
+                                <div class="editor-card-below">
+                                    <!-- 用来显示md的组件 -->
+                                    <mavon-editor style="height: 100%"
+                                                  :subfield="false"
+                                                  :default_open="mdDefaultOpen"
+                                                  :editable="false"
+                                                  :toolbarsFlag="false"
+                                                  v-model="docObject.body"></mavon-editor>
+                                </div>
+                            </el-col>
+                        </el-card>
+                        <el-card class="doc-markdown-edit-card" :key="index + '_' + 2"
+                                 v-if="docObject != null && docObject.type == 0 && docObject.edit == true">
+                            <!-- 用来编辑markDown文档的card -->
+                            <el-col :span="18">
+                                <input autocomplete="off" type="text" rows="2" validateevent="true"
+                                       class="input-md-title"
+                                       v-model="docObject.title"
+                                       placeholder="请输入标题">
+                            </el-col>
+                            <el-col :span="6" align="right">
+                                <el-button-group>
+                                    <el-button type="primary" plain icon="el-icon-document" round
+                                               @click="saveDoc(index,0)"
+                                               v-bind:disabled="manageDisabled"></el-button>
+                                    <el-button type="danger" plain icon="el-icon-delete" round
+                                               @click="deleteDoc(index)"
+                                               v-bind:disabled="manageDisabled"></el-button>
+                                </el-button-group>
+                            </el-col>
+                            <el-col :span="24">
+                                <hr class="hr-editor"/>
+                            </el-col>
+                            <el-col :span="24">
+                                <div class="editor-card-below">
+                                    <mavon-editor style="height: 100%" :toolbars="mdEditToolbars"
+                                                  v-model="docObject.body"></mavon-editor>
+                                </div>
+                            </el-col>
+                        </el-card>
+                        <el-card class="doc-richtext-show-card" :key="index + '_' + 3"
+                                 v-if="docObject != null && docObject.type == 1 && docObject.edit == false">
+                            <!-- 用来展示富文本编辑器的card -->
+                            <el-col :span="18">
+                            <span class="title-show">
+                                <!-- 放置标题 -->
+                                 <input autocomplete="off" type="text" rows="2" validateevent="true"
+                                        class="input-md-title"
+                                        v-model="docObject.title"
+                                        disabled>
+                            </span>
+                            </el-col>
+                            <el-col :span="6" align="right">
+                                <el-button-group>
+                                    <el-button type="info" plain icon="el-icon-edit" round
+                                               @click="editDoc(index)"
+                                               v-bind:disabled="manageDisabled"></el-button>
+                                    <el-button type="danger" plain icon="el-icon-delete" round
+                                               @click="deleteDoc(index)"
+                                               v-bind:disabled="manageDisabled"></el-button>
+                                </el-button-group>
+                            </el-col>
+                            <el-col :span="24">
+                                <hr class="hr-editor"/>
+                            </el-col>
+                            <el-col :span="24">
+                                <div class="editor-card-below">
+                                    <!-- 用来显示富文本编辑器结果的组件 -->
+                                    <span v-html="docObject.body"></span>
+                                </div>
+                            </el-col>
+                        </el-card>
+                        <el-card class="doc-richtext-edit-card" :key="index + '_' + 4"
+                                 v-if="docObject != null && docObject.type == 1 && docObject.edit == true">
+                            <el-col :span="18">
+                                <input autocomplete="off" type="text" rows="2" validateevent="true"
+                                       class="input-rt-title"
+                                       v-model="docObject.title"
+                                       placeholder="请输入标题">
+                            </el-col>
+                            <el-col :span="6" align="right">
+                                <el-button-group>
+                                    <el-button type="primary" plain icon="el-icon-document" round
+                                               @click="saveDoc(index,1)"
+                                               v-bind:disabled="manageDisabled"></el-button>
+                                    <el-button type="danger" plain icon="el-icon-delete" round
+                                               @click="deleteDoc(index)"
+                                               v-bind:disabled="manageDisabled"></el-button>
+                                </el-button-group>
+                            </el-col>
+                            <el-col :span="24">
+                                <hr class="hr-editor"/>
+                            </el-col>
+                            <el-col :span="24">
+                                <div class="editor-card-below">
+                                    <froala style="height: 100%" :tag="'textarea'"
+                                            :config="richTextEditorConfig" v-model="docObject.body"></froala>
+                                </div>
+                            </el-col>
+                        </el-card>
                     </div>
-
+                    <el-card class="add-doc-card">
+                        <el-button type="primary" icon="el-icon-document" plain @click="addMarkDownDoc"
+                                   v-bind:disabled="manageDisabled">
+                            添加文章(Markdown)
+                        </el-button>
+                        <el-button type="info" icon="el-icon-document" plain @click="addRichTextDoc"
+                                   v-bind:disabled="manageDisabled">
+                            添加文章(富文本)
+                        </el-button>
+                        <el-button type="success" plain @click="addDocAttachment"
+                                   v-bind:disabled="manageDisabled">
+                            添加附件<i class="el-icon-upload el-icon--right"></i>
+                        </el-button>
+                    </el-card>
                 </div>
+                <el-dialog
+                    title="上传附件"
+                    :visible.sync="uploadDialogVisible"
+                    width="30%">
+                    <span>
+                        <el-upload
+                            drag
+                            :data="fileUploadData"
+                            :action="fileUploadUrl"
+                            :on-success="handleAttachmentUploadSuccess"
+                            :before-upload="beforeAttachmentUpload"
+                            multiple>
+                                <i class="el-icon-upload"></i>
+                                <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                                <div class="el-upload__tip" slot="tip">上传的文件不要超过50M</div>
+                        </el-upload>
+                    </span>
+                    <span slot="footer" class="dialog-footer">
+                        <el-button type="primary" @click="uploadDialogVisible = false">关 闭</el-button>
+                    </span>
+                </el-dialog>
             </el-main>
         </el-container>
     </el-container>
@@ -61,13 +194,20 @@
 <script>
     import ztree from 'ztreev'
     import ApiUtils from '../../../../utils/ApiUtils';
+    import {mavonEditor} from 'mavon-editor'
+    import 'mavon-editor/dist/css/index.css'
+    import VueFroala from 'vue-froala-wysiwyg';
+
 
     export default {
         components: {
-            'ztree': ztree
+            'ztree': ztree,
+            'mavon-editor': mavonEditor,
         },
         data() {
             return {
+                mdDefaultOpen: 'preview',
+                currentNodeName: '',
                 ztreeSetting: {
                     view: {
                         addHoverDom: this.addHoverDomMethod,
@@ -100,12 +240,65 @@
                         data: {rootId: this.$route.params.rootId},
                         dataFilter: function (data) {
                             return data.data
-                        }
+                        },
                     }
                 },
                 ztreeData: [],
                 newCount: 1,
-
+                mdEditToolbars: {
+                    bold: true, // 粗体
+                    italic: true, // 斜体
+                    header: true, // 标题
+                    underline: true, // 下划线
+                    strikethrough: true, // 中划线
+                    mark: true, // 标记
+                    superscript: true, // 上角标
+                    subscript: true, // 下角标
+                    quote: true, // 引用
+                    ol: true, // 有序列表
+                    ul: true, // 无序列表
+                    link: true, // 链接
+                    imagelink: true, // 图片链接
+                    code: true, // code
+                    table: true, // 表格
+                    fullscreen: true, // 全屏编辑
+                    readmodel: true, // 沉浸式阅读
+                    htmlcode: true, // 展示html源码
+                    help: true, // 帮助
+                    /* 1.3.5 */
+                    undo: true, // 上一步
+                    redo: true, // 下一步
+                    trash: true, // 清空
+                    /* 1.4.2 */
+                    navigation: true, // 导航目录
+                    /* 2.1.8 */
+                    alignleft: true, // 左对齐
+                    aligncenter: true, // 居中
+                    alignright: true, // 右对齐
+                    /* 2.2.1 */
+                    subfield: true, // 单双栏模式
+                    preview: true, // 预览
+                },
+                richTextEditorConfig: {
+                    language: "zh_cn",
+                    events: {
+                        'froalaEditor.initialized': function () {
+                            console.log('initialized')
+                        }
+                    },
+                    heightMin: 300,
+                    heightMax: 900,
+                },
+                docObjects: [],
+                manageDisabled: true,
+                uploadDialogVisible: false,
+                fileUploadUrl: ApiUtils.treeFileUploadUrl,
+                fileUploadData: {
+                    creatorUid: localStorage.getItem('cp_uid'),
+                    rootId: this.$route.params.rootId,
+                    nodeId: this.$route.query.nodeid
+                },
+                attachmentsData: []
             }
         },
         methods: {
@@ -125,15 +318,20 @@
                     return false;
                 });
             },
-
             removeHoverDomMethod: function (treeId, treeNode) {
                 //删除按钮的监听事件
                 $("#addBtn_" + treeNode.tId).unbind().remove();
             },
             nodeClick: function (event, treeId, treeNode, clickFlag) {
-                //节点被点击的处理，拉取数据,修改URL
-                console.log('点击了');
+                //节点被点击的处理，修改URL,拉取数据
+                let self = this;
+                this.currentNodeName = treeNode.name;
+                let nodeId = treeNode.id;
+                let newPath = this.$route.path + '?nodeid=' + nodeId;
+                this.$router.replace(newPath);
 
+                self.loadTreeNodeObjects(nodeId);
+                self.loadAttachmentsData(nodeId);
             },
             nodeDragDrop: function (event, treeId, treeNodes, targetNode, moveType, isCopy) {
                 //节点被移动结束后的处理
@@ -157,7 +355,7 @@
                     rootId: rootId
                 };
                 ApiUtils.moveTreeNode(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         //移动成功
 
                     } else {
@@ -183,7 +381,7 @@
                     status: 0,
                 };
                 ApiUtils.createTreeNode(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         console.log(JSON.stringify(data.data));
                         zTree.addNodes(treeNode, data.data);
                     } else {
@@ -193,6 +391,22 @@
                     }
                 });
             },
+            beforeNodeRename: function (treeId, treeNode, newName, isCancel, store) {
+                if (newName.length == 0) {
+                    this.$message.error('节点名称不能为空');
+                    store.cancel = true;
+                } else {
+                    store.cancel = false;
+                }
+            },
+            beforeNodeRemove: function (treeId, treeNode, store) {
+                if (treeNode.pid == 0) {
+                    store.cancel = true;
+                    alert('根节点不能删除');
+                } else {
+                    store.cancel = !confirm("确认删除 节点 -- " + treeNode.name + " 吗？");
+                }
+            },
             nodeRemove: function (event, treeId, treeNode) {
                 //删除节点
                 let self = this;
@@ -200,16 +414,18 @@
                     id: treeNode.id,
                 };
                 ApiUtils.deleteTreeNode(params).then(function (data) {
-                    if (data.code === 0) {
-                        //成功重命名
-
+                    if (data.code === 100) {
+                        //成功删除
+                        self.$message({
+                            type: 'success',
+                            message: '删除成功!'
+                        });
                     } else {
                         //失败提示
                         console.log(data.message);
                         self.$message.error(data.message);
                     }
                 });
-
             },
             nodeRename: function (event, treeId, treeNode, isCancel) {
                 //编辑节点名称结束后的事件
@@ -221,7 +437,7 @@
                         name: treeNode.name,
                     };
                     ApiUtils.renameTreeNode(params).then(function (data) {
-                        if (data.code === 0) {
+                        if (data.code === 100) {
                             //成功重命名
 
                         } else {
@@ -234,7 +450,217 @@
                 }
 
             },
+            addMarkDownDoc() {
+                //添加markdown类型的文章
+                let markDownDoc = this.getNewTreeObject(0);
+                this.docObjects.push(markDownDoc);
+            },
+            addRichTextDoc() {
+                //添加富文本类型的文章
+                let markDownDoc = this.getNewTreeObject(1);
+                this.docObjects.push(markDownDoc);
+
+            },
+            addDocAttachment() {
+                //添加文章附件
+                this.uploadDialogVisible = true;
+
+            },
+            getNewTreeObject(type) {
+                type = type === null ? 0 : type;
+                let self = this;
+                return {
+                    'id': null,
+                    'object_id': 0,
+                    'type': type,
+                    'title': '',
+                    'body': '',
+                    'latest': 0,
+                    'readonly': 0,
+                    'edit': true,
+                    'node_id': self.$route.query.nodeid,
+                };
+            },
+            editDoc(index) {
+                this.docObjects[index].edit = true;
+            },
+            saveDoc(index, type) {
+                //type 0->markDown 1->richText
+                let self = this;
+                let docObject = self.docObjects[index];
+                console.log(docObject);
+                //保存内容
+                let params = {
+                    type: type,
+                    title: docObject.title,
+                    body: docObject.body,
+                    creatorUid: localStorage.getItem('cp_uid'),
+                    readonly: 0,
+                    nodeId: docObject.node_id,
+                    objectId: docObject.object_id,
+                };
+                console.log(params);
+                ApiUtils.saveTreeObject(params).then(function (data) {
+                    if (data.code === 100) {
+                        //保存成功
+                        let objectData = data.data;
+                        objectData.edit = false;//改为显示模式
+                        objectData.node_id = self.$route.query.nodeid;
+                        self.docObjects.splice(index, 1, objectData);
+                        self.$message({
+                            type: 'success',
+                            message: '保存成功!'
+                        });
+                    } else {
+                        //失败提示
+                        self.$message.error(data.message);
+                    }
+                });
+
+
+            },
+            deleteDoc(index) {
+                let self = this;
+                this.$confirm('此操作将永久删除该内容, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    //开始执行删除
+                    if (self.docObjects[index].id == null) {
+                        //尚未编辑完的文档
+                        console.log('index:' + index);
+                        self.docObjects.splice(index, 1, null);
+                        self.$message({
+                            type: 'success',
+                            message: '删除成功!'
+                        });
+                    } else {
+                        //已经在数据库中的文档
+                        let params = {
+                            nodeId: self.docObjects[index].node_id,
+                            objectId: self.docObjects[index].object_id,
+                        };
+                        ApiUtils.deleteTreeObject(params).then(function (data) {
+                            if (data.code === 100) {
+                                //删除成功
+                                self.docObjects.splice(index, 1, null);
+                                self.$message({
+                                    type: 'success',
+                                    message: '删除成功!'
+                                });
+                            } else {
+                                //失败提示
+                                self.$message.error(data.message);
+                            }
+                        });
+
+                    }
+
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+            },
+            checkLoadQueryParams() {
+                //检查加载时候的参数,并做处理，展开菜单节点，加载数据。(需在左侧菜单结点全部加载完毕后才能执行)
+                let self = this;
+                let gid = self.$route.params.gid;//群组ID，如果当前用户不在群组内，则禁用各种操作按钮
+                let nodeId = self.$route.query.nodeid;
+                if (nodeId != null) {
+                    let rootId = self.$route.params.rootId;
+                    //展开节点
+
+//                    let zTree = self.$refs.ztreeSide;
+//                    let targetNode = zTree.action('getNodeByParam', 'id', nodeId, null);
+//                    zTree.action('expandNode', targetNode, true, true, true);
+//                    self.currentNodeName = targetNode.name;
+
+                    //加载数据
+                    self.loadTreeNodeObjects(nodeId);
+                    self.loadAttachmentsData();
+
+                }
+                //根据用户信息判断是否在组内，如果是组内用户的话，设置为可编辑
+                let params = {
+                    groupId: gid,
+                    userId: localStorage.getItem('cp_uid')
+                };
+                ApiUtils.checkGroupRight(params).then(function (data) {
+                    if (data.code === 100) {
+                        //获取校验结果成功
+                        let type = data.data;
+                        //普通用户为0，管理员为1，都有编辑权限
+                        if (type in [0, 1]) {
+                            self.manageDisabled = false;//启用编辑
+                        } else {
+                            //把左侧栏的菜单编辑关掉
+//                            let zTree = self.$refs.ztreeSide;
+//                            zTree.action('setEditable', false);
+                        }
+
+                    } else {
+                        //失败提示
+                        console.log(data.message);
+                        self.$message.error(data.message);
+                    }
+                });
+
+            },
+            beforeAttachmentUpload(file) {
+                const isLt50M = file.size / 1024 / 1024 < 50;
+                if (!isLt50M) {
+                    this.$message.error('上传附件大小不能超过 50MB!');
+                }
+                return isLt50M;
+            },
+            handleAttachmentUploadSuccess(res, file) {
+                //附件上传成功
+                console.log(res);
+                this.loadAttachmentsData();
+            },
+            loadAttachmentsData(nodeId) {
+                //加载附件数据信息
+                let self = this;
+                let params = {
+                    nodeId: nodeId == null ? self.$route.query.nodeid : nodeId
+                };
+                ApiUtils.getTreeAttachments(params).then(function (data) {
+                    if (data.code === 100) {
+                        self.attachmentsData = data.data;
+                    } else {
+                        //失败提示
+                        console.log(data.message);
+                        self.$message.error(data.message);
+                    }
+                });
+
+            },
+            loadTreeNodeObjects(nodeId) {
+                //获取树的节点列表,只获取markdown和富文本两种
+                let params = {
+                    nodeId: nodeId == null ? self.$route.query.nodeid : nodeId
+                };
+                ApiUtils.getSortedTreeObjects(params).then(function (data) {
+                    if (data.code === 100) {
+                        //获取成功,在结果对象添加false的edit标记
+                        data.data.forEach(function (currentValue, index, arr) {
+                            currentValue.edit = false;
+                        });
+                        self.docObjects = data.data;
+                    } else {
+                        //失败提示
+                        console.log(data.message);
+                        self.$message.error(data.message);
+                    }
+                });
+            }
         },
+        mounted: function () {
+            this.checkLoadQueryParams();
+        }
     }
 </script>
 
@@ -256,56 +682,62 @@
         color: #333;
     }
 
-    .ms-doc {
+    .doc-markdown-show-card,
+    .doc-markdown-edit-card,
+    .doc-richtext-edit-card,
+    .doc-richtext-show-card {
+        margin-top: 10px;
         width: 100%;
+        height: auto;
         max-width: 980px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        padding-bottom: 15px;
     }
 
-    .ms-doc h3 {
-        padding: 9px 10px 10px;
-        margin: 0;
-        font-size: 14px;
-        line-height: 17px;
-        background-color: #f5f5f5;
-        border: 1px solid #d8d8d8;
-        border-bottom: 0;
-        border-radius: 3px 3px 0 0;
+    .add-doc-card {
+        margin-top: 10px;
+        width: 100%;
+        height: auto;
+        max-width: 980px;
     }
 
-    .ms-doc article {
-        padding: 45px;
-        word-wrap: break-word;
+    .editor-card-below {
+        margin-top: 15px;
+        width: 100%;
+        min-height: 200px;
+    }
+
+    .hr-editor {
+        margin-top: 15px;
+        height: 1px;
+        border: none;
+        border-top: 1px dashed darkgray;
+    }
+
+    .input-md-title, .input-rt-title {
         background-color: #fff;
-        border: 1px solid #ddd;
-        border-bottom-right-radius: 3px;
-        border-bottom-left-radius: 3px;
+        background-image: none;
+        border: none;
+        box-sizing: border-box;
+        color: #5a5e66;
+        display: inline-block;
+        font-size: 30px;
+        height: 40px;
+        line-height: 1;
+        outline: 0;
+        padding: 0 15px;
+        width: 100%;
     }
 
-    .ms-doc article h1 {
-        font-size: 32px;
-        padding-bottom: 10px;
-        margin-bottom: 15px;
-        border-bottom: 1px solid #ddd;
+    .title-show {
+        background-color: #fff;
+        background-image: none;
+        box-sizing: border-box;
+        color: #5a5e66;
+        font-size: 30px;
+        height: 40px;
+        outline: 0;
+        padding: 0 15px;
+        width: 100%;
     }
-
-    .ms-doc article h2 {
-        margin: 24px 0 16px;
-        font-weight: 600;
-        line-height: 1.25;
-        padding-bottom: 7px;
-        font-size: 24px;
-        border-bottom: 1px solid #eee;
-    }
-
-    .ms-doc article p {
-        margin-bottom: 15px;
-        line-height: 1.5;
-    }
-
-    .ms-doc article .el-checkbox {
-        margin-bottom: 5px;
-    }
-
 
 </style>

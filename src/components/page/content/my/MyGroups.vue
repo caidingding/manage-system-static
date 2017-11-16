@@ -63,7 +63,7 @@
                     username: localStorage.getItem('cp_username')
                 };
                 ApiUtils.getMyGroups(params).then(function (data) {
-                    if (data.code === 0) {
+                    if (data.code === 100) {
                         console.log(data.data);
                         let groupTableData = [];
                         for (let i = 0; i < data.data.length; i++) {

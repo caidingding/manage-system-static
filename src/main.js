@@ -3,7 +3,7 @@ import App from './App';
 import axios from 'axios';
 //ElementUI 相关
 import ElementUI from 'element-ui';
-import 'element-ui/lib/theme-chalk/index.css';    // 默认主题
+import 'element-ui/lib/theme-chalk/index.css'; // 默认主题
 import "babel-polyfill";
 //路由相关
 import VueRouter from 'vue-router';
@@ -11,6 +11,20 @@ import Routers from './router';
 //基础工具类
 import ApiUtils from './utils/ApiUtils';
 import CookieUtils from './utils/CookieUtils';
+// Import and use Vue Froala lib.
+import VueFroala from 'vue-froala-wysiwyg'
+
+// Require Froala Editor js file.
+require('froala-editor/js/froala_editor.pkgd.min');
+require('froala-editor/js/languages/zh_cn.js');
+
+// Require Froala Editor css files.
+require('froala-editor/css/froala_editor.pkgd.min.css');
+require('font-awesome/css/font-awesome.css');
+require('froala-editor/css/froala_style.min.css');
+
+
+Vue.use(VueFroala)
 
 //开启配置
 Vue.use(ElementUI);
@@ -50,7 +64,7 @@ router.beforeEach((to, from, next) => {
             };
             ApiUtils.checkRememberToken(params).then(
                 function (data) {
-                    if (data.code === 0 || data.code === 4) {
+                    if (data.code === 100 || data.code === 104) {
                         //校验成功
                         next();
                     } else {

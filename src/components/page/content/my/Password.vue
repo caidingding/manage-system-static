@@ -75,7 +75,7 @@
                             newPassword: self.form.newPassword
                         };
                         ApiUtils.changePassword(params).then(function (data) {
-                            if (data.code === 0) {
+                            if (data.code === 100) {
                                 //修改密码成功!
                                 self.$message.success('密码修改成功！');
                                 CookieUtils.deleteCookie('cp_remember_token');
