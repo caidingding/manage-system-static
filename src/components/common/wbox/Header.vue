@@ -10,7 +10,7 @@
                     text-color="#fff"
                     active-text-color="#ffd04b">
                     <el-menu-item index="my">个人中心</el-menu-item>
-                    <el-menu-item index="wbox">WBOX服务平台</el-menu-item>
+                    <el-menu-item index="manage">管理平台</el-menu-item>
                 </el-menu>
             </div>
             <div class="user-info">
