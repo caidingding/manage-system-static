@@ -11,8 +11,8 @@
                     active-text-color="#ffd04b">
                     <el-submenu index="wiki" v-if="hasWiki">
                         <template slot="title">WIKI内容</template>
-                        <el-menu-item :index="''+subIndex" v-for="(subItem,subIndex) in wikiRoots">
-                            {{subItem.id}}-{{subItem.name}}
+                        <el-menu-item :index="''+subItem.id" v-for="(subItem,subIndex) in wikiRoots">
+                            {{subItem.name}}
                         </el-menu-item>
                     </el-submenu>
                     <el-menu-item index="my">个人中心</el-menu-item>
@@ -85,7 +85,6 @@
                         let treeRootId = keyPath[1];//tree的root id
                         //跳转到对应的wiki页面
                         let wikiPath = '/board/' + this.groupId + '/wiki/' + treeRootId;
-                        console.log('wikiPath:' + wikiPath);
                         this.$router.push({path: wikiPath});
                     }
                 }
@@ -107,8 +106,6 @@
                             self.hasWiki = true;
                         }
                         self.wikiRoots = data.data;
-                        console.log(data.data);
-                        console.log(self.hasWiki);
                     } else {
                         //失败提示
                         console.log(data.message);

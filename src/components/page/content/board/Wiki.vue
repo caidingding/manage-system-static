@@ -1,8 +1,14 @@
 <template>
     <el-container class="el-container">
         <el-aside class="el-aside" width="300px">
-            <vue-tree-list :model="treeData" default-tree-node-name="new node"
-                           default-leaf-node-name="new leaf"></vue-tree-list>
+            <ztree id="ztreeSide"
+                   :setting="ztreeSetting"
+                   :data="ztreeData"
+                   @onClick="nodeClick"
+                   @onDrop="nodeDragDrop"
+                   @onRemove="nodeRemove"
+                   @onRename="nodeRename"
+            ></ztree>
         </el-aside>
         <el-container>
             <el-main>
@@ -53,61 +59,188 @@
 </template>
 
 <script>
-    import {VueTreeList, Tree, TreeNode, Record} from 'vue-tree-list'
+    import ztree from 'ztreev'
+    import ApiUtils from '../../../../utils/ApiUtils';
 
     export default {
         components: {
-            VueTreeList
+            'ztree': ztree
         },
         data() {
             return {
-                treeData: new Tree([
-                    {
-                        name: 'Node 1',
-                        id: 1,
-                        pid: 0,
-                        children: [
-                            {
-                                name: 'Node 1-2',
-                                id: 2,
-                                isLeaf: true,
-                                pid: 1
-                            }
-                        ]
+                ztreeSetting: {
+                    view: {
+                        addHoverDom: this.addHoverDomMethod,
+                        removeHoverDom: this.removeHoverDomMethod,
+                        selectedMulti: false
                     },
-                    {
-                        name: 'Node 2',
-                        id: 3,
-                        pid: 0
+                    data: {
+                        simpleData: {
+                            enable: true,
+                            idKey: "id",
+                            pIdKey: "pid",
+                            rootPId: 0
+                        }
                     },
-                    {
-                        name: 'Node 3',
-                        id: 4,
-                        pid: 0
+                    edit: {
+                        enable: true,
+                        removeTitle: '删除',
+                        renameTitle: '重命名',
+                        drag: {
+                            isCopy: false,
+
+                        }
+                    },
+                    async: {
+                        enable: false,
+                    },
+                    once: {
+                        url: ApiUtils.loadNodesDataUrl,
+                        type: 'POST',
+                        data: {rootId: this.$route.params.rootId},
+                        dataFilter: function (data) {
+                            return data.data
+                        }
                     }
-                ]),
-                record: null,
+                },
+                ztreeData: [],
+                newCount: 1,
+
             }
         },
         methods: {
-            getTreeChange: function () {
-                this.record = Object.assign({}, Record);
-                console.log('--->' + JSON.stringify(this.record));
+            addHoverDomMethod: function (treeId, treeNode) {
+                //添加按钮的监听事件
+                let self = this;
+                let sObj = $("#" + treeNode.tId + "_span");
+                if (treeNode.editNameFlag || $("#addBtn_" + treeNode.tId).length > 0) return;
+                let addStr = "<span class='button add' id='addBtn_" + treeNode.tId
+                    + "' title='add node' onfocus='this.blur();'></span>";
+                sObj.after(addStr);
+                let btn = $("#addBtn_" + treeNode.tId);
+                if (btn) btn.bind("click", function () {
+                    let zTree = $.fn.zTree.getZTreeObj("ztreeSide");
+                    //后台保存新建的节点，并添加到树上
+                    self.createNode(zTree, treeNode);
+                    return false;
+                });
             },
 
+            removeHoverDomMethod: function (treeId, treeNode) {
+                //删除按钮的监听事件
+                $("#addBtn_" + treeNode.tId).unbind().remove();
+            },
+            nodeClick: function (event, treeId, treeNode, clickFlag) {
+                //节点被点击的处理，拉取数据,修改URL
+                console.log('点击了');
+
+            },
+            nodeDragDrop: function (event, treeId, treeNodes, targetNode, moveType, isCopy) {
+                //节点被移动结束后的处理
+                let self = this;
+                let currentNode = treeNodes[0];
+                let id = currentNode.id;
+                let pid = currentNode.pid;
+                let pos = currentNode.pos;
+                let targetId = targetNode.id;
+                let targetPid = targetNode.pid;
+                let targetPos = targetNode.pos;
+                let rootId = this.$route.params.rootId;
+                let params = {
+                    id: id,
+                    pid: pid,
+                    pos: pos,
+                    targetId: targetId,
+                    targetPid: targetPid,
+                    targetPos: targetPos,
+                    moveType: moveType,
+                    rootId: rootId
+                };
+                ApiUtils.moveTreeNode(params).then(function (data) {
+                    if (data.code === 0) {
+                        //移动成功
+
+                    } else {
+                        //失败提示
+                        console.log(data.message);
+                        self.$message.error(data.message);
+                    }
+                });
+
+            },
+            createNode: function (zTree, treeNode) {
+                //节点被创建后的处理
+                let self = this;
+                let rootId = self.$route.params.rootId;
+                let pid = treeNode.id;
+                let name = '新建内容节点';
+                //取群组列表数据到表中
+                let params = {
+                    rootId: rootId,
+                    pid: pid,
+                    name: name,
+                    type: 0,
+                    status: 0,
+                };
+                ApiUtils.createTreeNode(params).then(function (data) {
+                    if (data.code === 0) {
+                        console.log(JSON.stringify(data.data));
+                        zTree.addNodes(treeNode, data.data);
+                    } else {
+                        //失败提示
+                        console.log(data.message);
+                        self.$message.error(data.message);
+                    }
+                });
+            },
+            nodeRemove: function (event, treeId, treeNode) {
+                //删除节点
+                let self = this;
+                let params = {
+                    id: treeNode.id,
+                };
+                ApiUtils.deleteTreeNode(params).then(function (data) {
+                    if (data.code === 0) {
+                        //成功重命名
+
+                    } else {
+                        //失败提示
+                        console.log(data.message);
+                        self.$message.error(data.message);
+                    }
+                });
+
+            },
+            nodeRename: function (event, treeId, treeNode, isCancel) {
+                //编辑节点名称结束后的事件
+                if (!isCancel) {
+                    //如果没有取消修改操作
+                    let self = this;
+                    let params = {
+                        id: treeNode.id,
+                        name: treeNode.name,
+                    };
+                    ApiUtils.renameTreeNode(params).then(function (data) {
+                        if (data.code === 0) {
+                            //成功重命名
+
+                        } else {
+                            //失败提示
+                            console.log(data.message);
+                            self.$message.error(data.message);
+                        }
+                    });
+
+                }
+
+            },
         },
-        mounted() {
-            this.getTreeChange();
-        },
-        watch: {
-            treeData: function () {
-                this.getTreeChange();
-            }
-        }
     }
 </script>
 
 <style scoped>
+    @import "~ztree/css/metroStyle/metroStyle.css";
+
     .el-container {
         height: auto;
         border: 1px solid #eee
@@ -173,4 +306,6 @@
     .ms-doc article .el-checkbox {
         margin-bottom: 5px;
     }
+
+
 </style>

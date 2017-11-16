@@ -117,6 +117,34 @@ ApiUtils.getAuthorizedTreeRoots = params => {
     return axios.get(`${base}/api/tree/root/authorized/get`, {params: params}).then(res => res.data);
 };
 
+//一次性加载wiki所有菜单节点数据
+ApiUtils.loadNodesData = params => {
+    return axios.post(`${base}/api/tree/nodes/load`, params).then(res => res.data);
+};
+
+//创建wiki节点数据
+ApiUtils.createTreeNode = params => {
+    return axios.post(`${base}/api/tree/node/create`, params).then(res => res.data);
+};
+
+//重命名wiki节点
+ApiUtils.renameTreeNode = params => {
+    return axios.post(`${base}/api/tree/node/rename`, params).then(res => res.data);
+};
+
+//移动wiki节点
+ApiUtils.moveTreeNode = params => {
+    return axios.post(`${base}/api/tree/node/move/new`, params).then(res => res.data);
+};
+
+//删除wiki节点
+ApiUtils.deleteTreeNode = params => {
+    return axios.post(`${base}/api/tree/node/delete`, params).then(res => res.data);
+};
+
+//一次性加载wiki所有菜单节点数据的URL
+ApiUtils.loadNodesDataUrl = `${base}/api/tree/nodes/load`;
+
 //urls
 ApiUtils.avatarUploadUrl = `${base}/api/user/avatar/upload`;
 
