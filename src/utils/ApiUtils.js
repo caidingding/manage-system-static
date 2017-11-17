@@ -171,12 +171,21 @@ ApiUtils.saveTreeObject = params => {
     return axios.post(`${base}/api/tree/object/save`, params).then(res => res.data);
 };
 
+//在mavon的markdown编辑器中上传图片
+ApiUtils.uploadMavonMarkDownImage = params => {
+    return axios.post(`${base}/api/tree/mavon/image/upload`, params).then(res => res.data);
+};
+
+//urls
+
 //一次性加载wiki所有菜单节点数据的URL
 ApiUtils.loadNodesDataUrl = `${base}/api/tree/nodes/load`;
 
-//urls
 ApiUtils.avatarUploadUrl = `${base}/api/user/avatar/upload`;
 
 ApiUtils.treeFileUploadUrl = `${base}/api/tree/file/upload`;
+
+//froala富文本编辑器图片上传URL
+ApiUtils.froalaImageUploadURL = `${base}/api/tree/froala/image/upload`;
 
 export default ApiUtils;

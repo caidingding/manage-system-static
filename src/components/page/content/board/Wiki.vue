@@ -84,8 +84,9 @@
                             </el-col>
                             <el-col :span="24">
                                 <div class="editor-card-below">
-                                    <mavon-editor style="height: 100%" :toolbars="mdEditToolbars"
-                                                  v-model="docObject.body"></mavon-editor>
+                                    <mavon-editor ref="mavoneditor" style="height: 100%"
+                                                  :toolbars="mdEditToolbars"
+                                                  v-model="docObject.body" @imgAdd="mavonMarkdownImgAdd"></mavon-editor>
                                 </div>
                             </el-col>
                         </el-card>
@@ -150,7 +151,44 @@
                             </el-col>
                         </el-card>
                     </div>
-                    <el-card class="add-doc-card">
+                    <el-card class="attachments-show-card" v-if=" attachmentsData.length != 0">
+                        <!-- 用来展示附件的面板 -->
+                        <el-table
+                            :data="attachmentsData"
+                            style="width: 100%">
+                            <el-table-column
+                                prop="title"
+                                label="附件">
+                            </el-table-column>
+                            <el-table-column
+                                prop="size"
+                                label="大小"
+                                width="100">
+                            </el-table-column>
+                            <el-table-column
+                                label="操作"
+                                width="200">
+                                <template slot-scope="scope">
+                                    <el-button
+                                        size="mini"
+                                        type="primary"
+                                        @click="handleDownloadAttachment(scope.$index, scope.row)">
+                                        下载
+                                        <i class="el-icon-download el-icon--right"></i>
+                                    </el-button>
+                                    <el-button
+                                        size="mini"
+                                        type="danger"
+                                        v-bind:disabled="deleteAttachmentDisabled"
+                                        @click="handleDeleteAttachment(scope.$index, scope.row)">
+                                        删除
+                                        <i class="el-icon-delete el-icon--right"></i>
+                                    </el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </el-card>
+                    <el-card class="add-doc-card" v-show="currentNodeId">
                         <el-button type="primary" icon="el-icon-document" plain @click="addMarkDownDoc"
                                    v-bind:disabled="manageDisabled">
                             添加文章(Markdown)
@@ -171,6 +209,7 @@
                     width="30%">
                     <span>
                         <el-upload
+                            ref="upload"
                             drag
                             :data="fileUploadData"
                             :action="fileUploadUrl"
@@ -205,9 +244,11 @@
             'mavon-editor': mavonEditor,
         },
         data() {
+            let self = this;
             return {
                 mdDefaultOpen: 'preview',
                 currentNodeName: '',
+                currentNodeId: '',
                 ztreeSetting: {
                     view: {
                         addHoverDom: this.addHoverDomMethod,
@@ -288,16 +329,13 @@
                     },
                     heightMin: 300,
                     heightMax: 900,
+                    imageUploadURL: ApiUtils.froalaImageUploadURL
                 },
                 docObjects: [],
                 manageDisabled: true,
+                deleteAttachmentDisabled: false,
                 uploadDialogVisible: false,
                 fileUploadUrl: ApiUtils.treeFileUploadUrl,
-                fileUploadData: {
-                    creatorUid: localStorage.getItem('cp_uid'),
-                    rootId: this.$route.params.rootId,
-                    nodeId: this.$route.query.nodeid
-                },
                 attachmentsData: []
             }
         },
@@ -330,8 +368,14 @@
                 let newPath = this.$route.path + '?nodeid=' + nodeId;
                 this.$router.replace(newPath);
 
+                self.currentNodeId = treeNode.id;//将当前的nodeId赋值给一个变量
                 self.loadTreeNodeObjects(nodeId);
                 self.loadAttachmentsData(nodeId);
+
+                //清除组件的缓存的文件列表
+                let upload = this.$refs.upload;
+                upload.clearFiles();
+
             },
             nodeDragDrop: function (event, treeId, treeNodes, targetNode, moveType, isCopy) {
                 //节点被移动结束后的处理
@@ -478,7 +522,7 @@
                     'latest': 0,
                     'readonly': 0,
                     'edit': true,
-                    'node_id': self.$route.query.nodeid,
+                    'node_id': self.currentNodeId,
                 };
             },
             editDoc(index) {
@@ -488,24 +532,35 @@
                 //type 0->markDown 1->richText
                 let self = this;
                 let docObject = self.docObjects[index];
-                console.log(docObject);
+                let title = docObject.title;
+                let body = docObject.body;
+
+                if (title == null || title.length == 0) {
+                    self.$message.error('标题不能为空');
+                    return;
+                }
+                if (body == null || body.length == 0) {
+                    self.$message.error('内容不能为空');
+                    return;
+                }
+
                 //保存内容
                 let params = {
                     type: type,
-                    title: docObject.title,
-                    body: docObject.body,
+                    title: title,
+                    body: body,
                     creatorUid: localStorage.getItem('cp_uid'),
                     readonly: 0,
                     nodeId: docObject.node_id,
                     objectId: docObject.object_id,
                 };
-                console.log(params);
+              
                 ApiUtils.saveTreeObject(params).then(function (data) {
                     if (data.code === 100) {
                         //保存成功
                         let objectData = data.data;
                         objectData.edit = false;//改为显示模式
-                        objectData.node_id = self.$route.query.nodeid;
+                        objectData.node_id = self.currentNodeId;
                         self.docObjects.splice(index, 1, objectData);
                         self.$message({
                             type: 'success',
@@ -579,6 +634,7 @@
 //                    self.currentNodeName = targetNode.name;
 
                     //加载数据
+                    self.currentNodeId = nodeId;
                     self.loadTreeNodeObjects(nodeId);
                     self.loadAttachmentsData();
 
@@ -594,8 +650,11 @@
                         let type = data.data;
                         //普通用户为0，管理员为1，都有编辑权限
                         if (type in [0, 1]) {
+                            //有权限
                             self.manageDisabled = false;//启用编辑
                         } else {
+                            //没权限
+                            self.deleteAttachmentDisabled = true;//禁止删除附件
                             //把左侧栏的菜单编辑关掉
 //                            let zTree = self.$refs.ztreeSide;
 //                            zTree.action('setEditable', false);
@@ -640,6 +699,7 @@
             },
             loadTreeNodeObjects(nodeId) {
                 //获取树的节点列表,只获取markdown和富文本两种
+                let self = this;
                 let params = {
                     nodeId: nodeId == null ? self.$route.query.nodeid : nodeId
                 };
@@ -656,10 +716,76 @@
                         self.$message.error(data.message);
                     }
                 });
+            },
+            handleDownloadAttachment(index, row) {
+                //下载附件
+                window.open(row.body);
+            },
+            handleDeleteAttachment(index, row) {
+                //删除附件
+                let self = this;
+                this.$confirm('此操作将永久删除该内容, 是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    //开始执行删除
+                    let params = {
+                        nodeId: row.node_id,
+                        objectId: row.object_id,
+                    };
+                    ApiUtils.deleteTreeObject(params).then(function (data) {
+                        if (data.code === 100) {
+                            //删除成功
+                            self.loadAttachmentsData();
+                            self.$message({
+                                type: 'success',
+                                message: '删除成功!'
+                            });
+                        } else {
+                            //失败提示
+                            self.$message.error(data.message);
+                        }
+                    });
+
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });
+                });
+                //结束
+            },
+            mavonMarkdownImgAdd(filename, imgfile) {
+                //mavon markdown编辑器的图片添加事件处理
+                let self = this;
+
+                let formdata = new FormData();
+                formdata.append('file', imgfile);
+                ApiUtils.uploadMavonMarkDownImage(formdata).then(function (data) {
+                    if (data.code === 100) {
+                        //上传成功，替换image
+                        let mavoneditorIndex = self.$refs['mavoneditor'].length - 1;
+                        self.$refs['mavoneditor'][mavoneditorIndex].$img2Url(filename, data.data);
+                    } else {
+                        //失败提示
+                        self.$message.error(data.message);
+                    }
+                });
+
             }
         },
         mounted: function () {
             this.checkLoadQueryParams();
+        },
+        computed: {
+            fileUploadData: function () {
+                return {
+                    creatorUid: localStorage.getItem('cp_uid'),
+                    rootId: this.$route.params.rootId,
+                    nodeId: this.currentNodeId
+                }
+            }
         }
     }
 </script>
@@ -685,7 +811,8 @@
     .doc-markdown-show-card,
     .doc-markdown-edit-card,
     .doc-richtext-edit-card,
-    .doc-richtext-show-card {
+    .doc-richtext-show-card,
+    .attachments-show-card {
         margin-top: 10px;
         width: 100%;
         height: auto;
