@@ -68,7 +68,7 @@
              */
             cropUploadSuccess(jsonData, field) {
                 console.log('-------- upload success --------');
-                if (jsonData.code == 0) {
+                if (jsonData.code == 100) {
                     localStorage.setItem('cp_userlogo', jsonData.data);
                     this.$message.success('上传头像成功');
                     //2秒后刷新页面

@@ -1,8 +1,9 @@
 <template>
     <el-container class="el-container">
         <el-aside class="el-aside" width="300px">
+            <el-input size="mini" v-model="searchMenuWord" placeholder="搜索菜单" suffix-icon="el-icon-search"></el-input>
             <ztree id="ztreeSide"
-                   ref="ztreeSide"
+                   ref="ztree"
                    :setting="ztreeSetting"
                    :data="ztreeData"
                    @onClick="nodeClick"
@@ -209,7 +210,7 @@
                     width="30%">
                     <span>
                         <el-upload
-                            ref="upload"
+                            ref="elupload"
                             drag
                             :data="fileUploadData"
                             :action="fileUploadUrl"
@@ -246,6 +247,7 @@
         data() {
             let self = this;
             return {
+                searchMenuWord: '',
                 mdDefaultOpen: 'preview',
                 currentNodeName: '',
                 currentNodeId: '',
@@ -253,7 +255,8 @@
                     view: {
                         addHoverDom: this.addHoverDomMethod,
                         removeHoverDom: this.removeHoverDomMethod,
-                        selectedMulti: false
+                        selectedMulti: false,
+                        fontCss: this.zTreeGetFontCss
                     },
                     data: {
                         simpleData: {
@@ -336,13 +339,19 @@
                 deleteAttachmentDisabled: false,
                 uploadDialogVisible: false,
                 fileUploadUrl: ApiUtils.treeFileUploadUrl,
-                attachmentsData: []
+                attachmentsData: [],
+                zTreeDisableEdit: false,
+                searchTreeNodeList: []
             }
         },
         methods: {
             addHoverDomMethod: function (treeId, treeNode) {
                 //添加按钮的监听事件
                 let self = this;
+                if (self.zTreeDisableEdit) {
+                    //如果没有编辑权限，则不显示自定义的添加按钮
+                    return;
+                }
                 let sObj = $("#" + treeNode.tId + "_span");
                 if (treeNode.editNameFlag || $("#addBtn_" + treeNode.tId).length > 0) return;
                 let addStr = "<span class='button add' id='addBtn_" + treeNode.tId
@@ -363,7 +372,7 @@
             nodeClick: function (event, treeId, treeNode, clickFlag) {
                 //节点被点击的处理，修改URL,拉取数据
                 let self = this;
-                this.currentNodeName = treeNode.name;
+                self.currentNodeName = treeNode.name;
                 let nodeId = treeNode.id;
                 let newPath = this.$route.path + '?nodeid=' + nodeId;
                 this.$router.replace(newPath);
@@ -373,9 +382,10 @@
                 self.loadAttachmentsData(nodeId);
 
                 //清除组件的缓存的文件列表
-                let upload = this.$refs.upload;
-                upload.clearFiles();
-
+                let elupload = this.$refs.elupload;
+                if (elupload) {
+                    elupload.clearFiles();
+                }
             },
             nodeDragDrop: function (event, treeId, treeNodes, targetNode, moveType, isCopy) {
                 //节点被移动结束后的处理
@@ -426,7 +436,6 @@
                 };
                 ApiUtils.createTreeNode(params).then(function (data) {
                     if (data.code === 100) {
-                        console.log(JSON.stringify(data.data));
                         zTree.addNodes(treeNode, data.data);
                     } else {
                         //失败提示
@@ -554,7 +563,7 @@
                     nodeId: docObject.node_id,
                     objectId: docObject.object_id,
                 };
-              
+
                 ApiUtils.saveTreeObject(params).then(function (data) {
                     if (data.code === 100) {
                         //保存成功
@@ -584,7 +593,6 @@
                     //开始执行删除
                     if (self.docObjects[index].id == null) {
                         //尚未编辑完的文档
-                        console.log('index:' + index);
                         self.docObjects.splice(index, 1, null);
                         self.$message({
                             type: 'success',
@@ -626,17 +634,23 @@
                 let nodeId = self.$route.query.nodeid;
                 if (nodeId != null) {
                     let rootId = self.$route.params.rootId;
-                    //展开节点
-
-//                    let zTree = self.$refs.ztreeSide;
-//                    let targetNode = zTree.action('getNodeByParam', 'id', nodeId, null);
-//                    zTree.action('expandNode', targetNode, true, true, true);
-//                    self.currentNodeName = targetNode.name;
 
                     //加载数据
                     self.currentNodeId = nodeId;
                     self.loadTreeNodeObjects(nodeId);
                     self.loadAttachmentsData();
+
+                    //500毫秒之后展开节点
+                    setTimeout(function () {
+                        let zTree = $.fn.zTree.getZTreeObj("ztreeSide");
+                        let targetNode = zTree.getNodeByParam('id', nodeId, null);
+                        self.expandSinglePath(targetNode, zTree);
+                        setTimeout(function () {
+                            zTree.selectNode(targetNode);
+                            self.currentNodeName = targetNode.name;
+                        }, 1000);//设置1秒后再选中该节点
+                    }, 500);
+
 
                 }
                 //根据用户信息判断是否在组内，如果是组内用户的话，设置为可编辑
@@ -655,9 +669,20 @@
                         } else {
                             //没权限
                             self.deleteAttachmentDisabled = true;//禁止删除附件
-                            //把左侧栏的菜单编辑关掉
-//                            let zTree = self.$refs.ztreeSide;
-//                            zTree.action('setEditable', false);
+
+                            //200毫秒之后把左侧栏的菜单编辑关掉
+                            setTimeout(function () {
+                                let zTree = $.fn.zTree.getZTreeObj("ztreeSide");
+                                zTree.setEditable(false);
+                                /**
+                                 * 设置用户不可对节点进行编辑
+                                 * 本来上面setEditable(false)就已经取消了编辑按钮组了，
+                                 * 但是ztree插件的作者说当初设计控件的时候脑子抽风了没有把添加按钮也加到编辑组中，
+                                 * 导致需要添加需要通过自定义按钮来实现，那么这里通过一个变量来控制用户点击添加按钮也不能操作成功。
+                                 *
+                                 */
+                                self.zTreeDisableEdit = true;
+                            }, 200);
                         }
 
                     } else {
@@ -668,6 +693,21 @@
                 });
 
             },
+            expandSinglePath(currNode, ztreeObj) {
+                //展开从根节点到当前节点的单一路径，并设置当前节点为选中状态
+                //展开的所有节点，这是从父节点开始查找（也可以全文查找）
+                let expandedNodes = [];
+                let parentNodeId = currNode.pid;
+                while (parentNodeId != 0) {
+                    let parentNode = ztreeObj.getNodeByParam('id', parentNodeId, null);
+                    expandedNodes.push(parentNode);
+                    parentNodeId = parentNode.pid;
+                }
+                for (let i = expandedNodes.length - 1; i >= 0; i--) {
+                    let node = expandedNodes[i];
+                    ztreeObj.expandNode(node, true, false, false);
+                }
+            },
             beforeAttachmentUpload(file) {
                 const isLt50M = file.size / 1024 / 1024 < 50;
                 if (!isLt50M) {
@@ -677,7 +717,6 @@
             },
             handleAttachmentUploadSuccess(res, file) {
                 //附件上传成功
-                console.log(res);
                 this.loadAttachmentsData();
             },
             loadAttachmentsData(nodeId) {
@@ -772,7 +811,41 @@
                         self.$message.error(data.message);
                     }
                 });
+            },
+            searchMenuChange() {
+                //查找树状菜单的文本框内容改变时的处理函数
+                let self = this;
+                let searchMenuWord = $.trim(this.searchMenuWord);
+                let zTree = $.fn.zTree.getZTreeObj("ztreeSide");
+                let keyType = "name";//按照属性值来查找
+                if (searchMenuWord === "") {
+                    self.updateTreeNodes(false, zTree);//先把之前的高亮效果去掉
+                    return;
+                }
+                self.updateTreeNodes(false, zTree);//先把之前的高亮效果去掉
+                self.searchTreeNodeList = zTree.getNodesByParamFuzzy(keyType, searchMenuWord);
+                self.updateTreeNodes(true, zTree);
 
+            },
+            updateTreeNodes(highlight, zTree) {
+                //更新树节点状态
+                //展开并高亮显示符合搜索条件的节点
+                let self = this;
+                let nodeList = self.searchTreeNodeList;
+                for (let i = 0, l = nodeList.length; i < l; i++) {
+                    nodeList[i].highlight = highlight;
+                    zTree.updateNode(nodeList[i]);
+                    if (highlight == true) {
+                        self.expandSinglePath(nodeList[i], zTree);
+                    }
+                }
+            },
+            zTreeGetFontCss(treeId, treeNode) {
+                //zTree字体的样式
+                return (!!treeNode.highlight) ? {color: "#A60000", "font-weight": "bold"} : {
+                    color: "#333",
+                    "font-weight": "normal"
+                };
             }
         },
         mounted: function () {
@@ -786,6 +859,9 @@
                     nodeId: this.currentNodeId
                 }
             }
+        },
+        watch: {
+            searchMenuWord: 'searchMenuChange'
         }
     }
 </script>
@@ -866,5 +942,4 @@
         padding: 0 15px;
         width: 100%;
     }
-
 </style>
