@@ -29,14 +29,14 @@
       <el-input type="textarea" v-model="ruleForm.desc"></el-input>
     </el-form-item>
     <el-form-item>
-      <el-button type="primary" @click="submitForm('ruleForm')">立即创建</el-button>
+      <el-button type="primary" @click="toSetUser('ruleForm')">立即创建</el-button>
       <el-button @click="resetForm('ruleForm')">重置</el-button>
     </el-form-item>
   </el-form>
 </div>
  <div>
-    <el-dialog title="设置参与人员" :visible.sync="setJionPepopleFormVisible">
-        <el-form :model="createGroupForm" :rules="createGroupFormRules" ref="createGroupForm"
+    <el-dialog :show-close=false :close-on-click-modal=false  title="设置参与人员" :visible.sync="setJionPepopleFormVisible">
+        <el-form :model="createGroupForm" :rules="rules" ref="createGroupForm"
                  label-width="100px" class="demo-ruleForm">
           <el-row :gutter="20">
              <el-col :span="12"><div class="grid-content bg-purple">
@@ -49,17 +49,40 @@
                 :data="data2"
                 show-checkbox
                 accordion
+                node-key="id"
                 :expand-on-click-node="true"
                 :props="defaultProps"
-                :render-content="renderContent"
+                @check-change="getChange"
                 :filter-node-method="filterNode"
-                @check-change='getChange'
+                :render-content="renderContent"
                 ref="tree2">
               </el-tree>
              </div></el-col>
              <el-col :span="12"><div class="grid-content bg-purple">
                <p class="icon-s"><span><i class="el-icon-menu"></i>已选：</span></p>
                <div class="selected">
+                 <div style="height:200px;">
+                 <el-tag size="small"
+                    v-for="tag in tags"
+                    :key="tag.id"
+                    closable
+                    @close="handleClose(tag.id)"
+                    disable-transitions
+                    :type="tag.type">
+                    {{tag.label}}
+                  </el-tag></div>
+                  <div style="border-top:1px solid #d8dce5;height:100px;">
+                     <p class="icon-s"><span><i class="el-icon-setting"></i>管理员：</span></p>
+                  <el-tag size="small"
+                     v-for="admin in admintags"
+                     :key="admin.id"
+                     closable
+                     @close="handleCloseAdmin(admin.id)"
+                     disable-transitions
+                     :type="admin.type">
+                     {{admin.label}}
+                   </el-tag>
+                 </div>
                </div>
              </div></el-col>
             </el-col>
@@ -67,74 +90,32 @@
         </el-form>
         <div slot="footer" class="dialog-footer">
             <el-button type="primary" @click="submitForm('createGroupForm')">确 定</el-button>
-            <el-button @click="resetForm('createGroupForm')">取 消</el-button>
-            <el-button ref="checked_node_click" @click="getCheckedNodes()">通过 node 获取</el-button>
+            <el-button type="primary" @click="notSetUser('createGroupForm')">暂不设置</el-button>
+            <el-button @click="changeVisible()">取 消</el-button>
         </div>
     </el-dialog>
 </div>
-
 </div>
 </template>
   <script>
+  import WboxApiUtils from '../../../utils/WboxApiUtils';
     export default {
       data() {
         return {
-          selected_user:[],
-          checked_user:[],
+          testHtml:"<span>这是个测试<span>",
           filterText: '',
-       data2: [{
-         id: 1,
-         label: '一级 1',
-         type:2,
-         children: [{
-           id: 4,
-           type:2,
-           label: '二级 1-1',
-           children: [{
-             id: 9,
-              type:2,
-             label: '三级 1-1-1'
-           }, {
-             id: 10,
-              type:2,
-             label: '三级 1-1-2'
-           }]
-         }]
-       }, {
-         id: 2,
-          type:1,
-         label: '一级 2',
-         children: [{
-           id: 5,
-            type:2,
-           label: '二级 2-1'
-         }, {
-           id: 6,
-           type:2,
-           label: '二级 2-2'
-         }]
-       }, {
-         id: 3,
-         type:1,
-         label: '一级 3',
-         children: [{
-           id: 7,
-           type:2,
-           label: '二级 3-1'
-         }, {
-           id: 8,
-           type:2,
-           label: '二级 3-2'
-         }]
-       }],
+          admintags:[],
+          tags: [],
+       data2: [],
        defaultProps: {
          children: 'children',
          label: 'label',
-         type:'type'
+         item_type:'item_type',
+         is_admin:'is_admin',
+         id:'id'
        },
-
-          wboxInfoFormVisible:false,
-          setJionPepopleFormVisible:true,
+          wboxInfoFormVisible:true,
+          setJionPepopleFormVisible:false,
           select_cate:'我的群组',
           ruleForm: {
             name: '',
@@ -144,7 +125,7 @@
             desc: ''
           },
           createGroupForm:{
-
+            projectInfos:''
           },
           rules: {
             name: [
@@ -166,65 +147,294 @@
         };
       },
       methods: {
-        submitForm(formName) {
-          this.$refs[formName].validate((valid) => {
-            if (valid) {
-              this.changeVisible();
-            } else {
-              console.log('error submit!!');
-              return false;
+         submitForm(formName) {
+            const self = this;
+            let userIds = '';
+            let adminuids = '';
+            if(self.tags.length >0 || self.admintags.length > 0){//如果已经选择用户信息
+              for (var i = 0; i < self.tags.length; i++) {
+                if(i == self.tags.length-1){
+                  userIds = userIds+self.tags[i].id;
+                }else {
+                  userIds = userIds+self.tags[i].id+',';
+                }
+              }
+              for (var i = 0; i < self.admintags.length; i++) {
+                if(i == self.admintags.length-1){
+                  adminuids = adminuids+self.admintags[i].id;
+                }else {
+                  adminuids = adminuids+self.admintags[i].id+',';
+                }
+              }
+
+              let params = self.toCleanParams();
+              params.uids = userIds;
+              params.adminuids = adminuids;
+              self.toCreateProject(params);
+            }else {
+              self.$message.error('请选择参与人员')
             }
-          });
-        },
-        resetForm(formName) {
-          this.$refs[formName].resetFields();
-        },
-        changeVisible(){
-          if(this.wboxInfoFormVisible){
-              this.wboxInfoFormVisible = false;
-          }else{
-              this.wboxInfoFormVisible = true;
-          }
-          if(this.setJionPepopleFormVisible){
-            this.setJionPepopleFormVisible = false;
-          }else{
-            this.setJionPepopleFormVisible = true;
-          }
-        },
-        getChange(data){
-          this.getCheckedNode();
-          alert(this.checked_user.length)
 
-          //alert(checked.length);
-          // for (let i = 0; i < selected.length; i++) {
-          //   let node = selected[i];
-          //   if (node.type === 2) {
-          //     this.selected_user.push(selected[i]);
-          //   }
-          // }
-          // console.log(this.selected_user);
-
-        },
-        getCheckedNodes() {
-          this.checked_user = this.$refs.tree2.getCheckedNodes(false);
-          alert(this.checked_user.length)
-            //return this.$refs.tree2.getCheckedNodes();
           },
-        //获取我的群组信息
-        getMyGroup(){
+         resetForm(formName) {
+            this.$refs[formName].resetFields();
+          },
+         notSetUser(formName){
+            let params = this.toCleanParams();
+            this.toCreateProject(params);
+          },
+         toCleanParams(){
+            const self = this;
+            let status = 0;
+            let username = localStorage.getItem('cp_username');
+            if(self.ruleForm.delivery){
+              let status = 1;
+            }
+            let projectinfo = {
+              name : self.ruleForm.name,
+              ename : self.ruleForm.ename,
+              username : username,
+              status : status,
+              desc : self.ruleForm.desc,
+              path : self.ruleForm.path,
+              uids :'',
+              adminuids :'',
+            };
+            return projectinfo;
+          },
+          //创建新的项目
+         toCreateProject(params){
+            const self = this;
+            WboxApiUtils.createProject(params).then(function(data) {
+              if(data.code == 100){
+                 self.$message.success('项目创建成功');
+                 //跳转到我的项目列表
+                 self.$router.push('/wbox/myprojects');
+              }else{
+                console.log(data.message);
+                self.$message.error(data.message);
+              }
+            });
+          },
+         changeVisible(){
+            if(this.wboxInfoFormVisible){
+                this.wboxInfoFormVisible = false;
+                this.setJionPepopleFormVisible = true;
+            }else{
+                this.setJionPepopleFormVisible = false;
+                this.wboxInfoFormVisible = true;
+            }
+          },
+         getChange(data,ischecked){
+            if(data.item_type == 'user'  && ischecked){
+               if(data.is_admin){
+                    this.addAdminUsers(data);
+               }else{
+                   this.addCheckUser(data);
+               }
+            }else if (data.item_type =='user' && !ischecked) {
+               if(data.is_admin){
+                 this.handleCloseAdmin(data.id);
+               }else{
+                this.deletedCheckUser(data);
+              }
+            }else if(data.item_type == 'group' && ischecked){
+              let children = data.children;
+              for (var i = 0; i < children.length; i++) {
+                  if(children[i].is_admin){
+                    continue;
+                  }else{
+                    this.addCheckUser(children[i]);
+                  }
+              }
+            }
+          },
+         addCheckUser(data){
+             let checked  = this.tags;
+               if(checked.length == 0){
+                  this.addETags(data);
+               }else {
+                 let isChecked = false;
+                 for (var i = 0; i < checked.length; i++) {
+                   if(data.id === checked[i].id){
+                     isChecked = true;
+                   }
+                 }
+                 if(!isChecked){
+                   this.addETags(data);
+                 }
+               }
+          },
+         deletedCheckUser(data){
+            let checked = this.tags;
+            let newChecked = [];
+            for (var i = 0; i < checked.length; i++) {
+              if(data.id == checked[i].id){
+                continue;
+              }else{
+                newChecked.push(checked[i]);
+              }
+            }
+            this.tags = newChecked;
+          },
+         addETags(data){
+            let newtags = this.tags;
+            let tag =[];
+            tag.label = data.label;
+            tag.id = data.id;
+            tag.is_admin = data.is_admin;
+            let color = this.getColor();
+            tag.type = ''+color;
+            newtags.push(tag);
+            this.tags = newtags;
+          },
+         handleClose(id){
+             let index = id+'';
+             let checked = this.tags;
+             let newChecked = [];
+             for (var i = 0; i < checked.length; i++) {
+               if(id == checked[i].id){
+                 continue;
+               }else{
+                 newChecked.push(checked[i]);
+               }
+             }
+             this.tags = newChecked;
+             this.$refs.tree2.setChecked(index,false,false);
 
-        },
-        filterNode(value, data) {
-           if (!value) return true;
-           return data.label.indexOf(value) !== -1;
+           },
+         handleCloseAdmin(id){
+            const self = this;
+            const admins = self.admintags;
+            const newtags = [];
+            for (var i = 0; i < self.data2.length; i++) {
+              if(self.data2[i].children.length > 0){
+                for (var j = 0; j < self.data2[i].children.length; j++) {
+                  if(self.data2[i].children[j].id == id){
+                     self.data2[i].children[j].is_admin = false;
+                  }
+                }
+              }
+            }
+            for (var i = 0; i < admins.length; i++) {
+              if(admins[i].id == id){
+                continue;
+              }else{
+                newtags.push(admins[i]);
+              }
+            }
+            self.admintags = newtags;
+            this.$refs.tree2.setChecked(id,false,false);
+          },
+         getColor(){
+            let color = ['warning','success','info','danger'];
+            let i =parseInt(4*Math.random());
+            return color[i];
+          },
+          //获取我的群组信息
+         getMyGroup(){
+            let self = this;
+            let params = {
+                  username: localStorage.getItem('cp_username')
+                };
+                WboxApiUtils.getMyGroups(params).then(function (data) {
+                    if (data.code === 100) {
+                      self.data2 = data.data;
+                    } else {
+                        //失败提示
+                        console.log(data.message);
+                        self.$message.error(data.message);
+                    }
+                });
+          },
+         toSetUser(formName){
+            let self = this;
+            self.$refs[formName].validate((valid) => {
+              if (valid) {
+                self.changeVisible();
+                self.getMyGroup();
+                self.admintags = [];
+              } else {
+                self.$message.error('请检验所填参数');
+                console.log('error submit!!');
+                return false;
+              }
+            });
+          },
+         filterNode(value, data) {
+             if (!value) return true;
+             return data.label.indexOf(value) !== -1;
+           },
+         setAdmin(node,data) {
+            const self = this;
+            data.is_admin = true;
+             if(node.checked){
+               self.deletedCheckUser(data);
+               self.addAdminUsers(data);
+             }else{
+               let id = data.id+'';
+               this.$refs.tree2.setChecked(id,true,false);//添加
+             }
+          },
+         getAdminTags(data){
+           let tag =[];
+           tag.label = data.label;
+           tag.id = data.id;
+           tag.is_admin = data.is_admin;
+           let color = this.getColor();
+           tag.type = ''+color;
+           return tag;
          },
-      },
-      watch: {
-       filterText(val) {
-         this.$refs.tree2.filter(val);
+         addAdminUsers(node){
+           const self = this;
+           const admins = self.admintags;
+           if(admins.length == 0){
+             let tag = self.getAdminTags(node);
+             self.admintags.push(tag);
+           }else{
+             let flag = true;
+             for (var i = 0; i < admins.length; i++) {
+               if(admins[i].id == node.id){
+                 flag = false;
+               }
+             }
+             if(flag){
+               let tag = self.getAdminTags(node);
+               self.admintags.push(tag);
+             }
+           }
+         },
+         remove(node, data) {
+          const index = children.findIndex(d => d.id === data.id);
+          children.splice(index, 1);
+          },
+         renderContent(h, { node, data, store }) {
+            if(node.isLeaf && node.data.item_type == 'user'){
+              return (
+                <span style="flex: 1; display: flex; align-items: center; justify-content: space-between; font-size: 14px; padding-right: 8px;">
+                  <span>
+                    <span>{node.label}</span>
+                  </span>
+                  <span>
+                      <el-button  style="font-size: 12px;" type="text" on-click={ () => this.setAdmin(node,data) }>设为管理员</el-button>
+                  </span>
+                </span>);
+            }else{
+              return (
+                <span style="flex: 1; display: flex; align-items: center; justify-content: space-between; font-size: 14px; padding-right: 8px;">
+                  <span>
+                    <span>{node.label}</span>
+                  </span>
+                </span>);
+            }
+           }
+        },
+         watch: {
+         filterText(val) {
+           this.$refs.tree2.filter(val);
+         }
        }
-     }
-    }
+      }
   </script>
 
   <style scoped="true">
@@ -243,10 +453,9 @@
         padding: 1px 12px;
         margin-bottom: -2px;
     }
-    .text {
-   font-size: 14px;
- }
-
+ .text {
+      font-size: 14px;
+    }
  .icon-s{
    color: #878d99;
    margin-bottom: 8px;
@@ -255,7 +464,6 @@
  .item {
    margin-bottom: 18px;
  }
- .clearfix:before,
  .clearfix:after {
    display: table;
    content: "";
@@ -268,7 +476,6 @@
     border-bottom: 1px solid #e6ebf5;
     box-sizing: border-box;
  }
-
  .box-card {
    width: 100%;
  }
@@ -292,9 +499,6 @@
  .bg-purple-dark {
    background: #99a9bf;
  }
- .bg-purple {
-
- }
  .bg-purple-light {
    background: #e5e9f2;
  }
@@ -305,5 +509,12 @@
  .row-bg {
    padding: 10px 0;
    background-color: #f9fafc;
+ }
+ .el-tag{
+   margin-top: 12px;
+ }
+ .el-tag--small{
+   margin-left: 20px;
+   margin-right: 2px;
  }
   </style>

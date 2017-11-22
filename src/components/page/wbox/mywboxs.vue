@@ -2,141 +2,238 @@
     <div class="table">
         <div class="crumbs">
             <el-breadcrumb separator="/">
-                <el-breadcrumb-item><i class="el-icon-menu"></i> 表格</el-breadcrumb-item>
-                <el-breadcrumb-item>基础表格</el-breadcrumb-item>
+                <el-breadcrumb-item><i class="el-icon-share"></i>Wbox管理</el-breadcrumb-item>
+                <el-breadcrumb-item>我的Wbox</el-breadcrumb-item>
             </el-breadcrumb>
         </div>
         <div class="handle-box">
-            <el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>
-            <el-select v-model="select_cate" placeholder="筛选省份" class="handle-select mr10">
-                <el-option key="1" label="广东省" value="广东省"></el-option>
-                <el-option key="2" label="湖南省" value="湖南省"></el-option>
-            </el-select>
-            <el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10"></el-input>
-            <el-button type="primary" icon="search" @click="search">搜索</el-button>
+            <el-button type="primary" icon="plus" class="mr10" @click="createProject">创建Wbox</el-button>
+            <el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10" icon="search"></el-input>
         </div>
-        <el-table :data="data" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
-            <el-table-column type="selection" width="55"></el-table-column>
-            <el-table-column prop="date" label="日期" sortable width="150">
-            </el-table-column>
-            <el-table-column prop="name" label="姓名" width="120">
-            </el-table-column>
-            <el-table-column prop="address" label="地址" :formatter="formatter">
-            </el-table-column>
-            <el-table-column label="操作" width="180">
+        <el-table :data="data" border style="width: 100%" ref="multipleTable">
+            <el-table-column
+                label="所属项目名称"
+                width="180">
                 <template scope="scope">
-                    <el-button size="small"
-                            @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-                    <el-button size="small" type="danger"
-                            @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                    <el-popover trigger="hover" placement="top">
+                        <p>项目ID: {{ scope.row.id }}</p>
+                        <p>项目简介: {{ scope.row.desc }}</p>
+                        <div slot="reference" class="name-wrapper">
+                            <p>{{ scope.row.name }}</p>
+                            <p style="color:#d8dce5">{{ scope.row.ename }}</p>
+                        </div>
+                    </el-popover>
+                </template>
+            </el-table-column>
+            <el-table-column
+                label="创建者"
+                width="180">
+                <template scope="scope">
+                    <el-popover trigger="hover" placement="top">
+                        <p>ID: {{ scope.row.creator_id }}</p>
+                        <p>用户名: {{ scope.row.creator_name }}</p>
+                        <div slot="reference" class="name-wrapper">
+                            <el-tag type="danger">{{ scope.row.creator_name }}</el-tag>
+                        </div>
+                    </el-popover>
+                </template>
+            </el-table-column>
+            <el-table-column
+                label="创建时间"
+                width="200">
+                <template scope="scope">
+                    <el-icon name="time"></el-icon>
+                    <span style="margin-left: 10px">{{ scope.row.created_at }}</span>
+                </template>
+            </el-table-column>
+            <el-table-column
+                prop="tag"
+                label="状态"
+                width="100"
+                :filters="[{ text: '进行中', value: 0 }, { text: '暂停', value: 1 },{ text: '完结', value: 2 }]"
+                :filter-method="filterStatus"
+                filter-placement="bottom-end">
+                <template scope="scope">
+                    <el-tag v-if="scope.row.status == 0"
+                        type="success"
+                        close-transition>进行中
+                    </el-tag>
+                    <el-tag v-if="scope.row.status == 1"
+                        type="danger"
+                        close-transition>暂停
+                    </el-tag>
+                    <el-tag v-if="scope.row.status == 2"
+                        type="warning"
+                        close-transition>完结
+                    </el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column
+                prop="tag"
+                label="标签"
+                width="100"
+                :filters="[{ text: '我创建的', value: true }, { text: '我参与的', value: false }]"
+                :filter-method="filterTag"
+                filter-placement="bottom-end">
+                <template scope="scope">
+                    <el-tag
+                        :type="scope.row.owner ? 'primary' : 'success'"
+                        close-transition>{{scope.row.owner ? '我创建的' : '添加我的'}}
+                    </el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column label="操作">
+                <template scope="scope">
+                    <el-button v-if="scope.row.owner"
+                               size="small"
+                               type="info"
+                               @click="handleManage(scope.$index, scope.row)">管理
+                    </el-button>
+                    <el-button v-if="scope.row.owner"
+                               size="small"
+                               type="danger"
+                               @click="delManage(scope.$index, scope.row)">删除
+                    </el-button>
+                    <el-button v-if="!scope.row.owner"
+                               size="small"
+                               type="success"
+                               @click="infosManage(scope.$index, scope.row)">详情
+                    </el-button>
                 </template>
             </el-table-column>
         </el-table>
-        <div class="pagination">
-            <el-pagination
-                    @current-change ="handleCurrentChange"
-                    layout="prev, pager, next"
-                    :total="1000">
-            </el-pagination>
-        </div>
     </div>
 </template>
-
 <script>
+import WboxApiUtils from '../../../utils/WboxApiUtils';
+
     export default {
         data() {
             return {
-                url: './static/vuetable.json',
                 tableData: [],
-                cur_page: 1,
-                multipleSelection: [],
-                select_cate: '',
                 select_word: '',
-                del_list: [],
-                is_search: false
+                currentPage: 1,
+                page_size:20,
             }
         },
-        created(){
-            this.getData();
-        },
-        computed: {
-            data(){
-                const self = this;
-                return self.tableData.filter(function(d){
-                    let is_del = false;
-                    for (let i = 0; i < self.del_list.length; i++) {
-                        if(d.name === self.del_list[i].name){
-                            is_del = true;
-                            break;
-                        }
-                    }
-                    if(!is_del){
-                        if(d.address.indexOf(self.select_cate) > -1 &&
-                            (d.name.indexOf(self.select_word) > -1 ||
-                            d.address.indexOf(self.select_word) > -1)
-                        ){
-                            return d;
-                        }
-                    }
-                })
-            }
-        },
+         created() {
+             this.getData();
+         },
         methods: {
-            handleCurrentChange(val){
-                this.cur_page = val;
-                this.getData();
-            },
-            getData(){
+          getData() {
                 let self = this;
-                if(process.env.NODE_ENV === 'development'){
-                    self.url = '/ms/table/list';
+                //取群组列表数据到表中
+                let params = {
+                    username: localStorage.getItem('cp_username')
                 };
-                self.$axios.post(self.url, {page:self.cur_page}).then((res) => {
-                    self.tableData = res.data.list;
-                })
+                WboxApiUtils.getMyProjects(params).then(function (data) {
+                    if (data.code === 100) {
+                        self.tableData = data.data;
+                    } else {
+                        //失败提示
+                        console.log(data.message);
+                        self.$message.error('服务器出错了，加载列表数据失败');
+                    }
+                });
             },
-            search(){
-                this.is_search = true;
-            },
-            formatter(row, column) {
-                return row.address;
-            },
+            //筛选标签
             filterTag(value, row) {
-                return row.tag === value;
+                return row.owner === value;
             },
-            handleEdit(index, row) {
-                this.$message('编辑第'+(index+1)+'行');
+            //状态筛选
+            filterStatus(value,row){
+              return row.status === value;
             },
-            handleDelete(index, row) {
-                this.$message.error('删除第'+(index+1)+'行');
+            //管理按钮
+            handleManage(index, row) {
+                alert("待完成");
             },
-            delAll(){
-                const self = this,
-                    length = self.multipleSelection.length;
-                let str = '';
-                self.del_list = self.del_list.concat(self.multipleSelection);
-                for (let i = 0; i < length; i++) {
-                    str += self.multipleSelection[i].name + ' ';
+            //删除按钮
+            delManage(index,row){
+                const self = this;
+                let content = '此操作将永久删除  '+row.name+' , 是否继续?';
+                self.$confirm(content, '提示', {
+                 confirmButtonText: '确定',
+                 cancelButtonText: '取消',
+                 type: 'warning'
+               }).then(() =>{
+                 self.toDelProject(row.id);
+               }
+               ).catch(() => {
+                 self.$message({
+                   type: 'info',
+                   message: '已取消删除'
+                 });
+               });
+             },
+             //删除项目
+             toDelProject(pid){
+               const self = this;
+               let params = {
+                 username:localStorage.getItem('cp_username'),
+                 pid:pid
+               }
+              WboxApiUtils.delProject(params).then(function (data) {
+                if(data.code === 100){
+                  self.$message({
+                    type: 'success',
+                    message: '删除成功'
+                  });
+                  self.getData();
+                }else{
+                  self.$message({
+                    type: 'danger',
+                    message: '删除失败'
+                  });
+                  console.log(data.data);
                 }
-                self.$message.error('删除了'+str);
-                self.multipleSelection = [];
+              });
+             },
+            //查看详情
+            infosManage(index,row){
+              alert("待完成");
             },
-            handleSelectionChange(val) {
-                this.multipleSelection = val;
+            createProject() {
+                this.$router.push('/wbox/createproject');
+            },
+            submitForm(formName) {
+                const self = this;
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                });
+            },
+            resetForm(formName) {
+                this.$refs[formName].resetFields();
             }
-        }
+          },
+        computed: {
+            data() {
+                const self = this;
+                return self.tableData.filter(function (d) {
+                    if (d.name.indexOf(self.select_word) > -1 ||
+                        d.creator_name.indexOf(self.select_word) > -1 ||
+                        d.created_at.indexOf(self.select_word) > -1
+                    ) {
+                        return d;
+                    }
+                });
+            }
+        },
     }
 </script>
 
 <style scoped>
-.handle-box{
-    margin-bottom: 20px;
-}
-.handle-select{
-    width: 120px;
-}
-.handle-input{
-    width: 300px;
-    display: inline-block;
-}
+    .handle-box {
+        margin-bottom: 20px;
+    }
+
+    .handle-input {
+        width: 300px;
+        display: inline-block;
+    }
 </style>

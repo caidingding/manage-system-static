@@ -10,6 +10,7 @@ import VueRouter from 'vue-router';
 import Routers from './router';
 //基础工具类
 import ApiUtils from './utils/ApiUtils';
+import WboxApiUtils from './utils/WboxApiUtils';
 import CookieUtils from './utils/CookieUtils';
 // Import and use Vue Froala lib.
 import VueFroala from 'vue-froala-wysiwyg'

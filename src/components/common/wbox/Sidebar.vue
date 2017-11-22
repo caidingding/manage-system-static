@@ -40,21 +40,21 @@
                             }
                         ]
                     },
-                    {
-                        icon: 'el-icon-document',
-                        index: '2',
-                        title: 'Wbox管理',
-                        subs: [
-                            {
-                                index: '/wbox/mywboxs',
-                                title: '我的Wbox'
-                            },
-                            {
-                                index: '/wbox/createwbox',
-                                title: '创建Wbox'
-                            },
-                        ]
-                    },
+                    // {
+                    //     icon: 'el-icon-document',
+                    //     index: '2',
+                    //     title: 'Wbox管理',
+                    //     subs: [
+                    //         {
+                    //             index: '/wbox/mywboxs',
+                    //             title: '我的Wbox'
+                    //         },
+                    //         {
+                    //             index: '/wbox/createwbox',
+                    //             title: '创建Wbox'
+                    //         },
+                    //     ]
+                    // },
                 ]
             }
         },
